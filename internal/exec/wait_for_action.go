@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudboss/unobin/pkg/defaults"
+	"github.com/cloudboss/unobin/pkg/runtime"
 )
 
 // WaitForAction polls a command until it exits 0 or the deadline is reached.
@@ -45,7 +46,7 @@ type WaitForActionOutput struct {
 // Run polls until the command exits 0, the timeout fires, or the context
 // is cancelled. A nonzero exit triggers another attempt, and an error is
 // returned if the process fails to start.
-func (a *WaitForAction) Run(ctx context.Context, _ any) (*WaitForActionOutput, error) {
+func (a *WaitForAction) Run(ctx context.Context, _ runtime.NoConfig) (*WaitForActionOutput, error) {
 	if len(a.Argv) == 0 {
 		return nil, errors.New("argv is required")
 	}

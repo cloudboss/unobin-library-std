@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cloudboss/unobin/pkg/runtime"
 	"github.com/stretchr/testify/require"
 )
 
 func runScript(t *testing.T, a *ScriptAction) *CommandActionOutput {
 	t.Helper()
-	res, err := a.Run(context.Background(), nil)
+	res, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	return res
@@ -52,7 +53,7 @@ func TestScriptReportsExitCode(t *testing.T) {
 }
 
 func TestScriptRequiresBody(t *testing.T) {
-	_, err := (&ScriptAction{}).Run(context.Background(), nil)
+	_, err := (&ScriptAction{}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "script is required")
 }

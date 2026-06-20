@@ -7,12 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudboss/unobin/pkg/runtime"
 	"github.com/stretchr/testify/require"
 )
 
 func runWaitFor(t *testing.T, a *WaitForAction) *WaitForActionOutput {
 	t.Helper()
-	res, err := a.Run(context.Background(), nil)
+	res, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	return res
@@ -50,13 +51,13 @@ func TestWaitForTimesOut(t *testing.T) {
 		Argv:     []string{"false"},
 		Interval: 10 * time.Millisecond,
 		Timeout:  50 * time.Millisecond,
-	}).Run(context.Background(), nil)
+	}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "timed out")
 }
 
 func TestWaitForRequiresArgv(t *testing.T) {
-	_, err := (&WaitForAction{}).Run(context.Background(), nil)
+	_, err := (&WaitForAction{}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "argv is required")
 }
@@ -65,7 +66,7 @@ func TestWaitForAbortsOnStartFailure(t *testing.T) {
 	_, err := (&WaitForAction{
 		Argv:    []string{"unobin-no-such-binary-xyz"},
 		Timeout: time.Second,
-	}).Run(context.Background(), nil)
+	}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 }
 
@@ -76,6 +77,6 @@ func TestWaitForContextCancel(t *testing.T) {
 		Argv:     []string{"false"},
 		Interval: 5 * time.Millisecond,
 		Timeout:  5 * time.Second,
-	}).Run(ctx, nil)
+	}).Run(ctx, runtime.NoConfig{})
 	require.Error(t, err)
 }

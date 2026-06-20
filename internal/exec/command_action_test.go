@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudboss/unobin/pkg/runtime"
 	"github.com/stretchr/testify/require"
 )
 
 func runCommand(t *testing.T, a *CommandAction) *CommandActionOutput {
 	t.Helper()
-	res, err := a.Run(context.Background(), nil)
+	res, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	return res
@@ -36,7 +37,7 @@ func TestCommandReportsExitCode(t *testing.T) {
 }
 
 func TestCommandRequiresArgv(t *testing.T) {
-	_, err := (&CommandAction{}).Run(context.Background(), nil)
+	_, err := (&CommandAction{}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "argv is required")
 }
@@ -67,12 +68,12 @@ func TestCommandWorkingDir(t *testing.T) {
 func TestCommandContextCancel(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
-	_, err := (&CommandAction{Argv: []string{"sleep", "5"}}).Run(ctx, nil)
+	_, err := (&CommandAction{Argv: []string{"sleep", "5"}}).Run(ctx, runtime.NoConfig{})
 	require.Error(t, err)
 }
 
 func TestCommandMissingExecutable(t *testing.T) {
 	a := &CommandAction{Argv: []string{"unobin-no-such-binary-xyz"}}
-	_, err := a.Run(context.Background(), nil)
+	_, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 }

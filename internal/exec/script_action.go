@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/cloudboss/unobin/pkg/defaults"
+	"github.com/cloudboss/unobin/pkg/runtime"
 )
 
 // ScriptAction runs a shell script via `<shell> -c <script>`. Shell defaults
@@ -36,7 +37,7 @@ type ScriptActionOutput = CommandActionOutput
 
 // Run invokes the configured shell with the script. Output mirrors
 // what CommandAction returns.
-func (a *ScriptAction) Run(ctx context.Context, _ any) (*ScriptActionOutput, error) {
+func (a *ScriptAction) Run(ctx context.Context, _ runtime.NoConfig) (*ScriptActionOutput, error) {
 	if a.Script == "" {
 		return nil, errors.New("script is required")
 	}

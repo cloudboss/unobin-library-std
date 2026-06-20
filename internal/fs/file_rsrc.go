@@ -47,11 +47,11 @@ func (f File) Defaults() []defaults.Default {
 	}
 }
 
-func (f *File) Create(_ context.Context, _ any) (*FileOutput, error) {
+func (f *File) Create(_ context.Context, _ runtime.NoConfig) (*FileOutput, error) {
 	return f.write()
 }
 
-func (f *File) Read(_ context.Context, _ any, _ *FileOutput) (*FileOutput, error) {
+func (f *File) Read(_ context.Context, _ runtime.NoConfig, _ *FileOutput) (*FileOutput, error) {
 	info, err := os.Stat(f.Path)
 	if err != nil {
 		if errors.Is(err, iofs.ErrNotExist) {
@@ -71,12 +71,12 @@ func (f *File) Read(_ context.Context, _ any, _ *FileOutput) (*FileOutput, error
 }
 
 func (f *File) Update(
-	_ context.Context, _ any, _ runtime.Prior[File, *FileOutput],
+	_ context.Context, _ runtime.NoConfig, _ runtime.Prior[File, *FileOutput],
 ) (*FileOutput, error) {
 	return f.write()
 }
 
-func (f *File) Delete(_ context.Context, _ any, _ *FileOutput) error {
+func (f *File) Delete(_ context.Context, _ runtime.NoConfig, _ *FileOutput) error {
 	err := os.Remove(f.Path)
 	if err != nil && !errors.Is(err, iofs.ErrNotExist) {
 		return err

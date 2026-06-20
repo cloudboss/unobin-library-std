@@ -19,13 +19,29 @@ func Library() *runtime.Library {
 		Name:        "std",
 		Description: "Standard actions and resources",
 		Actions: map[string]runtime.ActionRegistration{
-			"exec-command":  runtime.MakeAction[exec.CommandAction, *exec.CommandActionOutput](),
-			"exec-script":   runtime.MakeAction[exec.ScriptAction, *exec.ScriptActionOutput](),
-			"net-http":      runtime.MakeAction[net.HTTPAction, *net.HTTPActionOutput](),
-			"exec-wait-for": runtime.MakeAction[exec.WaitForAction, *exec.WaitForActionOutput](),
+			"exec-command": runtime.MakeAction[
+				exec.CommandAction,
+				*exec.CommandActionOutput,
+				runtime.NoConfig,
+			](),
+			"exec-script": runtime.MakeAction[
+				exec.ScriptAction,
+				*exec.ScriptActionOutput,
+				runtime.NoConfig,
+			](),
+			"net-http": runtime.MakeAction[
+				net.HTTPAction,
+				*net.HTTPActionOutput,
+				runtime.NoConfig,
+			](),
+			"exec-wait-for": runtime.MakeAction[
+				exec.WaitForAction,
+				*exec.WaitForActionOutput,
+				runtime.NoConfig,
+			](),
 		},
 		Resources: map[string]runtime.ResourceRegistration{
-			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput](),
+			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput, runtime.NoConfig](),
 		},
 	}
 }

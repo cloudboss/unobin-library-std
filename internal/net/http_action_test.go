@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudboss/unobin/pkg/runtime"
 	"github.com/stretchr/testify/require"
 )
 
 func runHTTP(t *testing.T, a *HTTPAction) *HTTPActionOutput {
 	t.Helper()
-	res, err := a.Run(context.Background(), nil)
+	res, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	return res
@@ -69,7 +70,7 @@ func TestHTTPReports404AsData(t *testing.T) {
 }
 
 func TestHTTPRequiresURL(t *testing.T) {
-	_, err := (&HTTPAction{}).Run(context.Background(), nil)
+	_, err := (&HTTPAction{}).Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "url is required")
 }
@@ -82,7 +83,7 @@ func TestHTTPTimeout(t *testing.T) {
 	defer srv.Close()
 
 	a := &HTTPAction{URL: srv.URL, Timeout: 10 * time.Millisecond}
-	_, err := a.Run(context.Background(), nil)
+	_, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 }
 
@@ -95,6 +96,6 @@ func TestHTTPContextCancel(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
-	_, err := (&HTTPAction{URL: srv.URL}).Run(ctx, nil)
+	_, err := (&HTTPAction{URL: srv.URL}).Run(ctx, runtime.NoConfig{})
 	require.Error(t, err)
 }
