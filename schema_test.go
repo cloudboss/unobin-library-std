@@ -19,32 +19,32 @@ func TestSchemaDeclaresDefaults(t *testing.T) {
 	require.Empty(t, warnings)
 
 	require.Equal(t, []lang.DefaultSpec{
-		{Field: "var.mode", Value: "420"},
-		{Field: "var.create-directory", Optional: true},
+		{Field: "input.mode", Value: "420"},
+		{Field: "input.create-directory", Optional: true},
 	}, schema.Resources["fs-file"].Defaults)
 
 	require.Equal(t, []lang.DefaultSpec{
-		{Field: "var.environment", Optional: true},
-		{Field: "var.working-dir", Optional: true},
+		{Field: "input.environment", Optional: true},
+		{Field: "input.working-dir", Optional: true},
 	}, schema.Actions["exec-command"].Defaults)
 
 	require.Equal(t, []lang.DefaultSpec{
-		{Field: "var.shell", Value: "'sh'"},
-		{Field: "var.environment", Optional: true},
-		{Field: "var.working-dir", Optional: true},
+		{Field: "input.shell", Value: "'sh'"},
+		{Field: "input.environment", Optional: true},
+		{Field: "input.working-dir", Optional: true},
 	}, schema.Actions["exec-script"].Defaults)
 
 	require.Equal(t, []lang.DefaultSpec{
-		{Field: "var.method", Value: "'GET'"},
-		{Field: "var.headers", Optional: true},
-		{Field: "var.body", Optional: true},
-		{Field: "var.timeout", Optional: true},
+		{Field: "input.method", Value: "'GET'"},
+		{Field: "input.headers", Optional: true},
+		{Field: "input.body", Optional: true},
+		{Field: "input.timeout", Optional: true},
 	}, schema.Actions["net-http"].Defaults)
 
 	require.Equal(t, []lang.DefaultSpec{
-		{Field: "var.interval", Value: "1000000000"},
-		{Field: "var.timeout", Value: "300000000000"},
-		{Field: "var.environment", Optional: true},
-		{Field: "var.working-dir", Optional: true},
+		{Field: "input.interval", Value: "1000000000"},
+		{Field: "input.timeout", Value: "300000000000"},
+		{Field: "input.environment", Optional: true},
+		{Field: "input.working-dir", Optional: true},
 	}, schema.Actions["exec-wait-for"].Defaults)
 }
