@@ -34,7 +34,7 @@ func TestFileCreatesMissingParentDirsWhenOptedIn(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "nested", "deep", "hello.txt")
 
-	_, err := (&File{Path: path, Content: "deep", Mode: 0o644, CreateDirectory: true}).
+	_, err := (&File{Path: path, Content: "deep", Mode: 0o644, CreateDirectory: new(true)}).
 		Create(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 

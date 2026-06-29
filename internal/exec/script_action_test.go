@@ -34,7 +34,7 @@ func TestScriptExpandsEnvironment(t *testing.T) {
 	cr := runScript(t, &ScriptAction{
 		Shell:       "sh",
 		Script:      "echo \"$UNOBIN_TEST_KEY\"",
-		Environment: map[string]string{"UNOBIN_TEST_KEY": "abc123"},
+		Environment: new(map[string]string{"UNOBIN_TEST_KEY": "abc123"}),
 	})
 	require.Equal(t, "abc123\n", cr.Stdout)
 }

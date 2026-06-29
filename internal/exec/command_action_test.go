@@ -45,7 +45,7 @@ func TestCommandRequiresArgv(t *testing.T) {
 func TestCommandArgsArePassedLiterally(t *testing.T) {
 	cr := runCommand(t, &CommandAction{
 		Argv:        []string{"echo", "$UNOBIN_TEST_KEY"},
-		Environment: map[string]string{"UNOBIN_TEST_KEY": "abc123"},
+		Environment: new(map[string]string{"UNOBIN_TEST_KEY": "abc123"}),
 	})
 	require.Equal(t, "$UNOBIN_TEST_KEY\n", cr.Stdout)
 }
@@ -53,14 +53,14 @@ func TestCommandArgsArePassedLiterally(t *testing.T) {
 func TestCommandEnvironmentVisibleToChild(t *testing.T) {
 	cr := runCommand(t, &CommandAction{
 		Argv:        []string{"sh", "-c", "echo \"$UNOBIN_TEST_KEY\""},
-		Environment: map[string]string{"UNOBIN_TEST_KEY": "abc123"},
+		Environment: new(map[string]string{"UNOBIN_TEST_KEY": "abc123"}),
 	})
 	require.Equal(t, "abc123\n", cr.Stdout)
 }
 
 func TestCommandWorkingDir(t *testing.T) {
 	dir := t.TempDir()
-	cr := runCommand(t, &CommandAction{Argv: []string{"pwd"}, WorkingDir: dir})
+	cr := runCommand(t, &CommandAction{Argv: []string{"pwd"}, WorkingDir: new(dir)})
 	require.True(t, strings.HasPrefix(strings.TrimSpace(cr.Stdout), dir),
 		"pwd %q should start with %q", cr.Stdout, dir)
 }

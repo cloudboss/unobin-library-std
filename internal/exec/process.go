@@ -18,6 +18,20 @@ type processSpec struct {
 	WorkingDir  string
 }
 
+func optionalMapValue(value *map[string]string) map[string]string {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func optionalStringValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
 func runProcess(ctx context.Context, spec processSpec) (*CommandActionOutput, error) {
 	cmd := exec.CommandContext(ctx, spec.Argv[0], spec.Argv[1:]...)
 	cmd.Env = mergedEnv(spec.Environment)

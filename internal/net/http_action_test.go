@@ -48,12 +48,12 @@ func TestHTTPPostWithHeadersAndBody(t *testing.T) {
 
 	hr := runHTTP(t, &HTTPAction{
 		URL:    srv.URL,
-		Method: http.MethodPost,
-		Headers: map[string]string{
+		Method: new(http.MethodPost),
+		Headers: new(map[string]string{
 			"Authorization": "Bearer xyz",
 			"Content-Type":  "application/json",
-		},
-		Body: `{"k":"v"}`,
+		}),
+		Body: new(`{"k":"v"}`),
 	})
 	require.Equal(t, 201, hr.Status)
 }
@@ -82,7 +82,7 @@ func TestHTTPTimeout(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	a := &HTTPAction{URL: srv.URL, Timeout: 10 * time.Millisecond}
+	a := &HTTPAction{URL: srv.URL, Timeout: new(10 * time.Millisecond)}
 	_, err := a.Run(context.Background(), runtime.NoConfig{})
 	require.Error(t, err)
 }

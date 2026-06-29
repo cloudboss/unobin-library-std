@@ -17,20 +17,16 @@ type WaitForAction struct {
 	Argv        []string
 	Interval    time.Duration
 	Timeout     time.Duration
-	Environment map[string]string
-	WorkingDir  string
+	Environment *map[string]string
+	WorkingDir  *string
 }
 
 // Defaults declares the inputs a body may leave out: one attempt per
-// second for up to five minutes, an absent environment adding nothing
-// to the parent's, and an absent working-dir inheriting the process
-// directory.
+// second for up to five minutes.
 func (a WaitForAction) Defaults() []defaults.Default {
 	return []defaults.Default{
 		defaults.Value(a.Interval, time.Second),
 		defaults.Value(a.Timeout, 5*time.Minute),
-		defaults.Optional(a.Environment),
-		defaults.Optional(a.WorkingDir),
 	}
 }
 
@@ -63,8 +59,8 @@ func (a *WaitForAction) Run(ctx context.Context, _ runtime.NoConfig) (*WaitForAc
 		attemptCtx, cancel := context.WithTimeout(ctx, remaining)
 		result, err := runProcess(attemptCtx, processSpec{
 			Argv:        a.Argv,
-			Environment: a.Environment,
-			WorkingDir:  a.WorkingDir,
+			Environment: optionalMapValue(a.Environment),
+			WorkingDir:  optionalStringValue(a.WorkingDir),
 		})
 		cancel()
 

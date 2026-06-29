@@ -6,25 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudboss/unobin/pkg/defaults"
 	"github.com/cloudboss/unobin/pkg/runtime"
 )
 
 // CommandAction execs a single process and captures its output.
 type CommandAction struct {
 	Argv        []string
-	Environment map[string]string
-	WorkingDir  string
-}
-
-// Defaults declares the inputs a body may leave out: an absent
-// environment adds nothing to the parent's, and an absent working-dir
-// inherits the process directory.
-func (a CommandAction) Defaults() []defaults.Default {
-	return []defaults.Default{
-		defaults.Optional(a.Environment),
-		defaults.Optional(a.WorkingDir),
-	}
+	Environment *map[string]string
+	WorkingDir  *string
 }
 
 // CommandActionOutput holds the captured output of a command run. Run returns
@@ -47,7 +36,7 @@ func (a *CommandAction) Run(ctx context.Context, _ runtime.NoConfig) (*CommandAc
 	}
 	return runProcess(ctx, processSpec{
 		Argv:        a.Argv,
-		Environment: a.Environment,
-		WorkingDir:  a.WorkingDir,
+		Environment: optionalMapValue(a.Environment),
+		WorkingDir:  optionalStringValue(a.WorkingDir),
 	})
 }

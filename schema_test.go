@@ -7,44 +7,68 @@ import (
 
 	"github.com/cloudboss/unobin/pkg/goschema"
 	"github.com/cloudboss/unobin/pkg/lang"
+	"github.com/cloudboss/unobin/pkg/typecheck"
 )
 
-// TestSchemaDeclaresDefaults reads this library the way the compiler
-// does and asserts each type's declared defaults, so an extraction
-// warning or a divergence between code and declaration fails here
-// first.
-func TestSchemaDeclaresDefaults(t *testing.T) {
+// TestSchemaDeclaresInputsAndDefaults reads this library the way the compiler
+// does and asserts the inputs and defaults that should be visible to factories.
+func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 	schema, warnings, err := goschema.Read(".")
 	require.NoError(t, err)
 	require.Empty(t, warnings)
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.mode", Value: "420"},
-		{Field: "input.create-directory", Optional: true},
 	}, schema.Resources["fs-file"].Defaults)
+	requireInputType(t, schema.Resources["fs-file"].Inputs,
+		"create-directory", typecheck.TOptional(typecheck.TBoolean()))
 
-	require.Equal(t, []lang.DefaultSpec{
-		{Field: "input.environment", Optional: true},
-		{Field: "input.working-dir", Optional: true},
-	}, schema.Actions["exec-command"].Defaults)
+	require.Empty(t, schema.Actions["exec-command"].Defaults)
+	requireInputType(t, schema.Actions["exec-command"].Inputs,
+		"environment", optionalStringMap())
+	requireInputType(t, schema.Actions["exec-command"].Inputs,
+		"working-dir", typecheck.TOptional(typecheck.TString()))
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.shell", Value: "'sh'"},
-		{Field: "input.environment", Optional: true},
-		{Field: "input.working-dir", Optional: true},
 	}, schema.Actions["exec-script"].Defaults)
+	requireInputType(t, schema.Actions["exec-script"].Inputs,
+		"environment", optionalStringMap())
+	requireInputType(t, schema.Actions["exec-script"].Inputs,
+		"working-dir", typecheck.TOptional(typecheck.TString()))
 
-	require.Equal(t, []lang.DefaultSpec{
-		{Field: "input.method", Value: "'GET'"},
-		{Field: "input.headers", Optional: true},
-		{Field: "input.body", Optional: true},
-		{Field: "input.timeout", Optional: true},
-	}, schema.Actions["net-http"].Defaults)
+	require.Empty(t, schema.Actions["net-http"].Defaults)
+	requireInputType(t, schema.Actions["net-http"].Inputs,
+		"method", typecheck.TOptional(typecheck.TString()))
+	requireInputType(t, schema.Actions["net-http"].Inputs,
+		"headers", optionalStringMap())
+	requireInputType(t, schema.Actions["net-http"].Inputs,
+		"body", typecheck.TOptional(typecheck.TString()))
+	requireInputType(t, schema.Actions["net-http"].Inputs,
+		"timeout", typecheck.TOptional(typecheck.TInteger()))
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.interval", Value: "1000000000"},
 		{Field: "input.timeout", Value: "300000000000"},
-		{Field: "input.environment", Optional: true},
-		{Field: "input.working-dir", Optional: true},
 	}, schema.Actions["exec-wait-for"].Defaults)
+	requireInputType(t, schema.Actions["exec-wait-for"].Inputs,
+		"environment", optionalStringMap())
+	requireInputType(t, schema.Actions["exec-wait-for"].Inputs,
+		"working-dir", typecheck.TOptional(typecheck.TString()))
+}
+
+func optionalStringMap() typecheck.Type {
+	return typecheck.TOptional(typecheck.TMap(typecheck.TString()))
+}
+
+func requireInputType(
+	t *testing.T,
+	inputs map[string]typecheck.Type,
+	name string,
+	want typecheck.Type,
+) {
+	t.Helper()
+	got, ok := inputs[name]
+	require.True(t, ok)
+	require.Truef(t, got.Equal(want), "input %s: got %s, want %s", name, got, want)
 }

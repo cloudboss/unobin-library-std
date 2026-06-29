@@ -14,18 +14,15 @@ import (
 type ScriptAction struct {
 	Script      string
 	Shell       string
-	Environment map[string]string
-	WorkingDir  string
+	Environment *map[string]string
+	WorkingDir  *string
 }
 
 // Defaults declares the inputs a body may leave out: the shell
-// defaults to sh, an absent environment adds nothing to the parent's,
-// and an absent working-dir inherits the process directory.
+// defaults to sh.
 func (a ScriptAction) Defaults() []defaults.Default {
 	return []defaults.Default{
 		defaults.Value(a.Shell, "sh"),
-		defaults.Optional(a.Environment),
-		defaults.Optional(a.WorkingDir),
 	}
 }
 
@@ -43,7 +40,7 @@ func (a *ScriptAction) Run(ctx context.Context, _ runtime.NoConfig) (*ScriptActi
 	}
 	return runProcess(ctx, processSpec{
 		Argv:        []string{a.Shell, "-c", a.Script},
-		Environment: a.Environment,
-		WorkingDir:  a.WorkingDir,
+		Environment: optionalMapValue(a.Environment),
+		WorkingDir:  optionalStringValue(a.WorkingDir),
 	})
 }
