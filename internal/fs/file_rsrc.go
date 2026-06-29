@@ -24,7 +24,7 @@ type File struct {
 	Path            string
 	Content         string
 	Mode            int64
-	CreateDirectory bool
+	CreateDirectory *bool
 }
 
 // FileOutput is what gets stored in state after Create / Update. It
@@ -38,12 +38,10 @@ type FileOutput struct {
 func (f *File) SchemaVersion() int      { return 1 }
 func (f *File) ReplaceFields() []string { return []string{"path"} }
 
-// Defaults declares the inputs a body may leave out: mode defaults to
-// 0o644, and create-directory to its zero value, false.
+// Defaults declares the inputs a body may leave out: mode defaults to 0o644.
 func (f File) Defaults() []defaults.Default {
 	return []defaults.Default{
 		defaults.Value(f.Mode, 0o644),
-		defaults.Optional(f.CreateDirectory),
 	}
 }
 
@@ -89,7 +87,7 @@ func (f *File) write() (*FileOutput, error) {
 		return nil, errors.New("local.file: path is required")
 	}
 	mode := os.FileMode(f.Mode)
-	if f.CreateDirectory {
+	if f.CreateDirectory != nil && *f.CreateDirectory {
 		if err := os.MkdirAll(filepath.Dir(f.Path), 0o755); err != nil {
 			return nil, err
 		}
