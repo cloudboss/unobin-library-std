@@ -3,7 +3,7 @@ name: docs
 on:
   push:
     tags:
-      - "*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
     inputs:
       version:
@@ -20,4 +20,4 @@ jobs:
     with:
       version: ${{ inputs.version || github.ref_name }}
       setup-go: true
-      generate: go run github.com/cloudboss/cloudboss-docs/unobin/cmd/docgen@v0.1.0 --root . --out docs/reference
+      generate: go run github.com/cloudboss/cloudboss-docs/unobin/cmd/docgen@v0.1.4 --root . --out docs/reference
