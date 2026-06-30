@@ -19,6 +19,20 @@ func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.mode", Value: "420"},
+	}, schema.Resources["archive-zipfile"].Defaults)
+	requireInputType(t, schema.Resources["archive-zipfile"].Inputs,
+		"create-directory", typecheck.TOptional(typecheck.TBoolean()))
+	requireInputType(t, schema.Resources["archive-zipfile"].Inputs,
+		"source-dir", typecheck.TOptional(typecheck.TString()))
+	requireInputType(t, schema.Resources["archive-zipfile"].Inputs,
+		"source-file", typecheck.TOptional(typecheck.TString()))
+	requireInputType(t, schema.Resources["archive-zipfile"].Inputs,
+		"excludes", optionalStringList())
+	requireInputType(t, schema.Resources["archive-zipfile"].Inputs,
+		"entry-mode", typecheck.TOptional(typecheck.TInteger()))
+
+	require.Equal(t, []lang.DefaultSpec{
+		{Field: "input.mode", Value: "420"},
 	}, schema.Resources["fs-file"].Defaults)
 	requireInputType(t, schema.Resources["fs-file"].Inputs,
 		"create-directory", typecheck.TOptional(typecheck.TBoolean()))
@@ -59,6 +73,10 @@ func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 
 func optionalStringMap() typecheck.Type {
 	return typecheck.TOptional(typecheck.TMap(typecheck.TString()))
+}
+
+func optionalStringList() typecheck.Type {
+	return typecheck.TOptional(typecheck.TList(typecheck.TString()))
 }
 
 func requireInputType(

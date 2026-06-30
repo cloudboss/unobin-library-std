@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cloudboss/unobin-library-std/internal/archive"
 	"github.com/cloudboss/unobin-library-std/internal/exec"
 	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
@@ -32,6 +33,12 @@ func TestLibraryRegistrations(t *testing.T) {
 	waitFor, ok := lib.Actions["exec-wait-for"]
 	require.True(t, ok)
 	_, ok = waitFor.NewReceiver().(*exec.WaitForAction)
+	require.True(t, ok)
+
+	zipFileRes, ok := lib.Resources["archive-zipfile"]
+	require.True(t, ok)
+	require.Equal(t, 1, zipFileRes.SchemaVersion())
+	_, ok = zipFileRes.NewReceiver().(*archive.ZipFile)
 	require.True(t, ok)
 
 	fileRes, ok := lib.Resources["fs-file"]

@@ -1,7 +1,7 @@
 # Standard library
 
 The Unobin standard library provides resources and actions for common
-tasks such as operating on files, processes, and HTTP requests.
+tasks such as operating on files, zip archives, processes, and HTTP requests.
 
 ```
 factory: {
@@ -32,6 +32,19 @@ Add the library to the dependency project before compiling the factory:
 
 ```
 unobin deps get github.com/cloudboss/unobin-library-std@v0.2.1
+```
+
+Create a zip archive from a directory:
+
+```
+resources: {
+  package: std.archive-zipfile {
+    path: './build/app.zip'
+    source-dir: './app'
+    create-directory: true
+    excludes: ['**/.git/**']
+  }
+}
 ```
 
 ## Configuration

@@ -11,6 +11,7 @@
 //   - std.exec-wait-for - poll a command until it exits 0 or the deadline
 //
 // Resources:
+//   - std.archive-zipfile - a zip archive on the local filesystem
 //   - std.fs-file - a regular file on the local filesystem
 //
 // Actions implement the standard action interface: triggered

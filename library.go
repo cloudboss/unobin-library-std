@@ -3,6 +3,7 @@ package std
 import (
 	"github.com/cloudboss/unobin/pkg/runtime"
 
+	"github.com/cloudboss/unobin-library-std/internal/archive"
 	"github.com/cloudboss/unobin-library-std/internal/exec"
 	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
@@ -41,6 +42,11 @@ func Library() *runtime.Library {
 			](),
 		},
 		Resources: map[string]runtime.ResourceRegistration{
+			"archive-zipfile": runtime.MakeResource[
+				archive.ZipFile,
+				*archive.ZipFileOutput,
+				runtime.NoConfig,
+			](),
 			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput, runtime.NoConfig](),
 		},
 	}
