@@ -3,7 +3,7 @@ module github.com/cloudboss/unobin-library-std
 go 1.26.2
 
 require (
-	github.com/cloudboss/unobin v0.9.0
+	github.com/cloudboss/unobin v0.10.1
 	github.com/stretchr/testify v1.11.1
 )
 
