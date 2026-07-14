@@ -7,6 +7,7 @@ import (
 	"github.com/cloudboss/unobin-library-std/internal/exec"
 	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
+	"github.com/cloudboss/unobin-library-std/internal/random"
 )
 
 // Library returns the registration record for the std library: the
@@ -48,6 +49,11 @@ func Library() *runtime.Library {
 				runtime.NoConfig,
 			](),
 			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput, runtime.NoConfig](),
+			"random-id": runtime.MakeResource[
+				random.ID,
+				*random.IDOutput,
+				runtime.NoConfig,
+			](),
 		},
 	}
 }

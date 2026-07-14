@@ -9,6 +9,7 @@ import (
 	"github.com/cloudboss/unobin-library-std/internal/exec"
 	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
+	"github.com/cloudboss/unobin-library-std/internal/random"
 )
 
 func TestLibraryRegistrations(t *testing.T) {
@@ -45,5 +46,11 @@ func TestLibraryRegistrations(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, 1, fileRes.SchemaVersion())
 	_, ok = fileRes.NewReceiver().(*fs.File)
+	require.True(t, ok)
+
+	randomIDRes, ok := lib.Resources["random-id"]
+	require.True(t, ok)
+	require.Equal(t, 1, randomIDRes.SchemaVersion())
+	_, ok = randomIDRes.NewReceiver().(*random.ID)
 	require.True(t, ok)
 }

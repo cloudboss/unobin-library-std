@@ -13,6 +13,7 @@
 // Resources:
 //   - std.archive-zipfile - a zip archive on the local filesystem
 //   - std.fs-file - a regular file on the local filesystem
+//   - std.random-id - a cryptographically random identifier
 //
 // Actions implement the standard action interface: triggered
 // (hash-based re-run), with @lock cross-DAG serialization, @timeout,

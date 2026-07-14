@@ -1,7 +1,8 @@
 # Standard library
 
-The Unobin standard library provides resources and actions for common
-tasks such as operating on files, zip archives, processes, and HTTP requests.
+The unobin standard library provides resources and actions for common
+tasks such as operating on files, generating identifiers, running processes,
+and making HTTP requests.
 
 ```
 factory: {
@@ -46,6 +47,24 @@ resources: {
   }
 }
 ```
+
+Generate an identifier that remains stable until the resource is replaced:
+
+```
+resources: {
+  suffix: std.random-id {
+    byte-length: 8
+    prefix: 'web-'
+  }
+}
+
+outputs: {
+  name: { value: resource.suffix.hex }
+}
+```
+
+Changing `byte-length`, `prefix`, or any value in `keepers` replaces the
+resource and generates a new identifier.
 
 ## Configuration
 

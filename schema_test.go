@@ -37,6 +37,22 @@ func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 	requireInputType(t, schema.Resources["fs-file"].Inputs,
 		"create-directory", typecheck.TOptional(typecheck.TBoolean()))
 
+	randomID := schema.Resources["random-id"]
+	require.NotNil(t, randomID)
+	require.Empty(t, randomID.Defaults)
+	requireInputType(t, randomID.Inputs, "byte-length", typecheck.TInteger())
+	requireInputType(t, randomID.Inputs, "keepers", optionalStringMap())
+	requireInputType(t, randomID.Inputs, "prefix", typecheck.TOptional(typecheck.TString()))
+	for _, name := range []string{"id", "b64-url", "b64-std", "dec", "hex"} {
+		requireOutputType(t, randomID.Outputs, name, typecheck.TString())
+	}
+	require.Equal(t, []lang.ConstraintSpec{{
+		Kind:    "predicate",
+		When:    "true",
+		Require: "(input.byte-length >= 1)",
+		Message: "byte-length must be at least 1",
+	}}, randomID.Constraints)
+
 	require.Empty(t, schema.Actions["exec-command"].Defaults)
 	requireInputType(t, schema.Actions["exec-command"].Inputs,
 		"environment", optionalStringMap())
@@ -85,8 +101,26 @@ func requireInputType(
 	name string,
 	want typecheck.Type,
 ) {
+	requireSchemaType(t, inputs, name, want)
+}
+
+func requireOutputType(
+	t *testing.T,
+	outputs map[string]typecheck.Type,
+	name string,
+	want typecheck.Type,
+) {
+	requireSchemaType(t, outputs, name, want)
+}
+
+func requireSchemaType(
+	t *testing.T,
+	fields map[string]typecheck.Type,
+	name string,
+	want typecheck.Type,
+) {
 	t.Helper()
-	got, ok := inputs[name]
+	got, ok := fields[name]
 	require.True(t, ok)
-	require.Truef(t, got.Equal(want), "input %s: got %s, want %s", name, got, want)
+	require.Truef(t, got.Equal(want), "field %s: got %s, want %s", name, got, want)
 }
