@@ -26,6 +26,12 @@ func TestCompiledConsumer(t *testing.T) {
 	repo, err := os.Getwd()
 	require.NoError(t, err)
 	dir := t.TempDir()
+	binary := buildConsumer(t, repo, dir)
+	checkCompiledConsumer(t, repo, dir, binary)
+}
+
+func buildConsumer(t *testing.T, repo, dir string) string {
+	t.Helper()
 	moduleDir := strings.TrimSpace(string(runConsumerCommand(t, repo, nil, "go",
 		"list", "-m", "-f", "{{.Dir}}", "github.com/cloudboss/unobin")))
 	cli := filepath.Join(dir, "unobin")
@@ -35,7 +41,11 @@ func TestCompiledConsumer(t *testing.T) {
 		"--path", filepath.Join(repo, "testdata", "ub", "compiled"),
 		"--name", "consumer", "--version", "test", "--out", generated, "--build",
 		"--replace-go-module", libraryPath+"="+repo, "--replace-unobin", moduleDir)
-	binary := filepath.Join(generated, "consumer")
+	return filepath.Join(generated, "consumer")
+}
+
+func checkCompiledConsumer(t *testing.T, repo, dir, binary string) {
+	t.Helper()
 	stack, err := os.ReadFile(filepath.Join(repo, "testdata", "ub", "compiled", "test.ub"))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.ub"), stack, 0o600))

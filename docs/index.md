@@ -109,6 +109,11 @@ and a compiled factory that uses all seven exports. The compiled test builds
 the pinned Unobin CLI, generates a consumer, and exercises HTTP against a
 local server. Its first run downloads any missing Go dependencies.
 
+The distribution check packages this checkout in a temporary Go module proxy,
+downloads dependencies into an empty module cache, and builds and runs the
+same consumer without module replacements. This checks the unpublished std
+package against the published Unobin tag; it does not publish a release.
+
 Run `make docs` to generate the reference. Local generation and CI both use
 docgen `v0.2.1`; generated files are not committed.
 
