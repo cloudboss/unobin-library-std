@@ -73,6 +73,10 @@ func (w *countWriter) Write(p []byte) (int, error) {
 func ZipFileDefinition() runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig] {
 	return runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig]{
 		SchemaVersion: 1,
+		Validate: func(_ context.Context, z ZipFile, _ runtime.NoConfig) error {
+			_, err := z.validatedItems()
+			return err
+		},
 		Identity: runtime.ResourceIdentity[ZipFile, *ZipFileOutput]{
 			Version: 1,
 			Scope:   runtime.IdentityConfiguration,
@@ -127,19 +131,57 @@ func (z *ZipFile) Delete(_ context.Context, _ runtime.NoConfig, _ *ZipFileOutput
 }
 
 func (z *ZipFile) write() (*ZipFileOutput, error) {
-	if z.Path == "" {
-		return nil, errors.New("archive-zipfile: path is required")
+	items, err := z.validatedItems()
+	if err != nil {
+		return nil, err
 	}
 	if z.CreateDirectory != nil && *z.CreateDirectory {
 		if err := os.MkdirAll(filepath.Dir(z.Path), 0o755); err != nil {
 			return nil, err
 		}
 	}
+	return writeZipAtomic(z.Path, os.FileMode(z.Mode), items)
+}
+
+func (z *ZipFile) validatedItems() ([]zipItem, error) {
+	if err := validateZipPath(z.Path); err != nil {
+		return nil, err
+	}
 	items, err := z.collectItems()
 	if err != nil {
 		return nil, err
 	}
-	return writeZipAtomic(z.Path, os.FileMode(z.Mode), items)
+	for _, item := range items {
+		if item.content != nil {
+			continue
+		}
+		if err := validateZipSource(item.filePath); err != nil {
+			return nil, err
+		}
+	}
+	return items, nil
+}
+
+func validateZipSource(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("archive-zipfile: open source file %q: %w", filePath, err)
+	}
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("archive-zipfile: close source file %q: %w", filePath, err)
+	}
+	return nil
+}
+
+func validateZipPath(outputPath string) error {
+	if outputPath == "" {
+		return errors.New("archive-zipfile: path is required")
+	}
+	base := filepath.Base(outputPath)
+	if base == "." || base == string(filepath.Separator) {
+		return errors.New("archive-zipfile: path is invalid")
+	}
+	return nil
 }
 
 func (z *ZipFile) collectItems() ([]zipItem, error) {
@@ -489,11 +531,11 @@ func matchGlobParts(pattern, name []string) (bool, error) {
 }
 
 func writeZipAtomic(outputPath string, mode os.FileMode, items []zipItem) (*ZipFileOutput, error) {
-	base := filepath.Base(outputPath)
-	if base == "" || base == "." || base == string(filepath.Separator) {
-		return nil, errors.New("archive-zipfile: path is invalid")
+	if err := validateZipPath(outputPath); err != nil {
+		return nil, err
 	}
 
+	base := filepath.Base(outputPath)
 	tmp, err := os.CreateTemp(filepath.Dir(outputPath), "."+base+".*.tmp")
 	if err != nil {
 		return nil, err

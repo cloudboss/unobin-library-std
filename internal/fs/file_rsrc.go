@@ -38,6 +38,9 @@ type FileOutput struct {
 func FileDefinition() runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig] {
 	return runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig]{
 		SchemaVersion: 1,
+		Validate: func(_ context.Context, f File, _ runtime.NoConfig) error {
+			return f.validate()
+		},
 		Identity: runtime.ResourceIdentity[File, *FileOutput]{
 			Version: 1,
 			Scope:   runtime.IdentityConfiguration,
@@ -93,8 +96,8 @@ func (f *File) Delete(_ context.Context, _ runtime.NoConfig, _ *FileOutput) erro
 }
 
 func (f *File) write() (*FileOutput, error) {
-	if f.Path == "" {
-		return nil, errors.New("local.file: path is required")
+	if err := f.validate(); err != nil {
+		return nil, err
 	}
 	mode := os.FileMode(f.Mode)
 	if f.CreateDirectory != nil && *f.CreateDirectory {
@@ -111,4 +114,11 @@ func (f *File) write() (*FileOutput, error) {
 		SHA256: hex.EncodeToString(sum[:]),
 		Size:   int64(len(body)),
 	}, nil
+}
+
+func (f *File) validate() error {
+	if f.Path == "" {
+		return errors.New("local.file: path is required")
+	}
+	return nil
 }

@@ -291,6 +291,45 @@ func TestZipFileDefinition(t *testing.T) {
 	})
 }
 
+func TestZipFileValidationIsReadOnly(t *testing.T) {
+	dir := t.TempDir()
+	source := filepath.Join(dir, "source")
+	require.NoError(t, os.WriteFile(source, []byte("input"), 0o600))
+	createDirectory := true
+	z := ZipFile{
+		Path: filepath.Join(dir, "output", "bundle.zip"), SourceFile: &source,
+		CreateDirectory: &createDirectory,
+	}
+	validate := ZipFileDefinition().Validate
+	require.NotNil(t, validate)
+	require.NoError(t, validate(t.Context(), z, runtime.NoConfig{}))
+	require.NoDirExists(t, filepath.Dir(z.Path))
+	content, err := os.ReadFile(source)
+	require.NoError(t, err)
+	require.Equal(t, "input", string(content))
+
+	if os.Geteuid() == 0 {
+		t.Skip("root can read files without read permission")
+	}
+	require.NoError(t, os.Chmod(source, 0))
+	t.Cleanup(func() { require.NoError(t, os.Chmod(source, 0o600)) })
+	require.ErrorContains(t, validate(t.Context(), z, runtime.NoConfig{}), "open source file")
+	require.NoDirExists(t, filepath.Dir(z.Path))
+}
+
+func TestZipFileCreateValidatesBeforeCreatingDirectories(t *testing.T) {
+	content := "input"
+	createDirectory := true
+	z := ZipFile{
+		Path:            filepath.Join(t.TempDir(), "output", "bundle.zip"),
+		Entries:         &[]ZipEntry{{Name: "../escape", Content: &content}},
+		CreateDirectory: &createDirectory,
+	}
+	_, err := z.Create(t.Context(), runtime.NoConfig{})
+	require.ErrorContains(t, err, "unsafe entry name")
+	require.NoDirExists(t, filepath.Dir(z.Path))
+}
+
 func readZipMembers(t *testing.T, path string) map[string]zipMember {
 	t.Helper()
 	reader, err := zip.OpenReader(path)

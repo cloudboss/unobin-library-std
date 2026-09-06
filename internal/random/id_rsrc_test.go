@@ -125,3 +125,16 @@ func TestIDDefinition(t *testing.T) {
 		require.ErrorContains(t, err, "missing ID")
 	}
 }
+
+func TestIDDefinitionValidatesByteLength(t *testing.T) {
+	validate := IDDefinition().Validate
+	require.NotNil(t, validate)
+	for _, length := range []int64{-1, 0, 1} {
+		err := validate(t.Context(), ID{ByteLength: length}, runtime.NoConfig{})
+		if length < 1 {
+			require.ErrorContains(t, err, "byte-length must be at least 1")
+		} else {
+			require.NoError(t, err)
+		}
+	}
+}

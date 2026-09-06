@@ -40,6 +40,9 @@ type IDOutput struct {
 func IDDefinition() runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig] {
 	return runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig]{
 		SchemaVersion: 1,
+		Validate: func(_ context.Context, r ID, _ runtime.NoConfig) error {
+			return r.validate()
+		},
 		Identity: runtime.ResourceIdentity[ID, *IDOutput]{
 			Version: 1,
 			Scope:   runtime.IdentityConfiguration,
@@ -74,15 +77,11 @@ func (r ID) Constraints() []constraint.Constraint {
 }
 
 func (r *ID) Create(_ context.Context, _ runtime.NoConfig) (*IDOutput, error) {
-	if r.ByteLength < 1 {
-		return nil, errors.New("random-id: byte-length must be at least 1")
-	}
-	byteLength := int(r.ByteLength)
-	if int64(byteLength) != r.ByteLength {
-		return nil, errors.New("random-id: byte-length is too large")
+	if err := r.validate(); err != nil {
+		return nil, err
 	}
 
-	bytes := make([]byte, byteLength)
+	bytes := make([]byte, int(r.ByteLength))
 	if _, err := rand.Read(bytes); err != nil {
 		return nil, fmt.Errorf("random-id: generate bytes: %w", err)
 	}
@@ -91,6 +90,16 @@ func (r *ID) Create(_ context.Context, _ runtime.NoConfig) (*IDOutput, error) {
 		prefix = *r.Prefix
 	}
 	return encodeID(bytes, prefix), nil
+}
+
+func (r *ID) validate() error {
+	if r.ByteLength < 1 {
+		return errors.New("random-id: byte-length must be at least 1")
+	}
+	if int64(int(r.ByteLength)) != r.ByteLength {
+		return errors.New("random-id: byte-length is too large")
+	}
+	return nil
 }
 
 func (r *ID) Read(
