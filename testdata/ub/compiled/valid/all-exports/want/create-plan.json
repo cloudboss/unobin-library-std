@@ -1,0 +1,52 @@
+{
+  "format-version": 2,
+  "factory": {
+    "name": "consumer",
+    "version": "v0.0.0",
+    "content-revision": "<revision>"
+  },
+  "stack": "test",
+  "parallelism": 10,
+  "steps": [
+    {
+      "address": "action.script",
+      "kind": "action",
+      "decision": "rerun"
+    },
+    {
+      "address": "action.wait",
+      "kind": "action",
+      "decision": "rerun"
+    },
+    {
+      "address": "resource.archive",
+      "kind": "resource",
+      "decision": "create"
+    },
+    {
+      "address": "action.command",
+      "kind": "action",
+      "decision": "rerun"
+    },
+    {
+      "address": "resource.file",
+      "kind": "resource",
+      "decision": "create"
+    },
+    {
+      "address": "resource.id",
+      "kind": "resource",
+      "decision": "create"
+    },
+    {
+      "address": "action.http",
+      "kind": "action",
+      "decision": "rerun"
+    },
+    {
+      "address": "output.http",
+      "kind": "output",
+      "decision": "eval"
+    }
+  ]
+}

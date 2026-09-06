@@ -4,7 +4,6 @@ factory: {
     other: 'github.com/cloudboss/unobin-library-std'
   }
   inputs: {
-    url: { type: string }
     byte-length: { type: integer, default: 8 }
     source-file: { type: optional(string) }
   }
@@ -23,13 +22,13 @@ factory: {
   }
   actions: {
     command: std.exec-command {
-      argv: ['sh', '-c', 'printf "%s" "$VALUE"']
+      argv: ['sh', '-c', 'printf "%s\n%s" "$VALUE" "$PWD"']
       environment: { VALUE: resource.archive.sha256 }
       working-dir: '.'
       @trigger: resource.archive.sha256
     }
     script: std.exec-script {
-      script: 'printf "%s" "$VALUE"'
+      script: 'test "$VALUE" = script && printf "%s" "$STD_CONSUMER_URL"'
       environment: { VALUE: 'script' }
       working-dir: '.'
     }
@@ -39,52 +38,56 @@ factory: {
       working-dir: '.'
     }
     http: std.net-http {
-      url: input.url
+      url: action.script.stdout
       method: 'POST'
       headers: { 'X-Consumer': 'std' }
-      body: action.command.stdout
+      body: @core.to-json(local.results)
       timeout: 5000000000
       @trigger: resource.archive.sha256
     }
   }
+  locals: {
+    results: {
+      file: { sha256: resource.file.sha256, size: resource.file.size }
+      archive: {
+        sha256: resource.archive.sha256
+        base64-sha256: resource.archive.base64-sha256
+        size: resource.archive.size
+      }
+      id: {
+        id: resource.id.id
+        b64-url: resource.id.b64-url
+        b64-std: resource.id.b64-std
+        dec: resource.id.dec
+        hex: resource.id.hex
+      }
+      command: {
+        stdout: action.command.stdout
+        stderr: action.command.stderr
+        exit-code: action.command.exit-code
+        duration: action.command.duration
+      }
+      script: {
+        stdout: action.script.stdout
+        stderr: action.script.stderr
+        exit-code: action.script.exit-code
+        duration: action.script.duration
+      }
+      wait: {
+        attempts: action.wait.attempts
+        duration: action.wait.duration
+        stdout: action.wait.stdout
+        stderr: action.wait.stderr
+      }
+    }
+  }
   outputs: {
-    file: { value: { sha256: resource.file.sha256, size: resource.file.size } }
-    archive: { value: {
-      sha256: resource.archive.sha256
-      base64-sha256: resource.archive.base64-sha256
-      size: resource.archive.size
-    } }
-    id: { value: {
-      id: resource.id.id
-      b64-url: resource.id.b64-url
-      b64-std: resource.id.b64-std
-      dec: resource.id.dec
-      hex: resource.id.hex
-    } }
-    command: { value: {
-      stdout: action.command.stdout
-      stderr: action.command.stderr
-      exit-code: action.command.exit-code
-      duration: action.command.duration
-    } }
-    script: { value: {
-      stdout: action.script.stdout
-      stderr: action.script.stderr
-      exit-code: action.script.exit-code
-      duration: action.script.duration
-    } }
-    wait: { value: {
-      attempts: action.wait.attempts
-      duration: action.wait.duration
-      stdout: action.wait.stdout
-      stderr: action.wait.stderr
-    } }
     http: { value: {
       status: action.http.status
       status-text: action.http.status-text
       headers: action.http.headers
       body: action.http.body
-      duration: action.http.duration
+      duration-valid: action.http.duration >= 0
     } }
   }
 }

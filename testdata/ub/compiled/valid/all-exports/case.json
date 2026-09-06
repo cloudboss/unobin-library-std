@@ -1,0 +1,63 @@
+{
+  "name": "consumer",
+  "factoryPath": "src",
+  "libraryPath": "example.com/std/consumer",
+  "build": true,
+  "commands": [
+    {
+      "name": "invalid-length",
+      "args": ["plan", "-c", "test.ub", "-o", "invalid.ubp"],
+      "env": { "UB_INPUT_byte_length": "0" },
+      "stderr": "want/invalid-length.stderr",
+      "exitCode": 1
+    },
+    {
+      "name": "invalid-source",
+      "args": ["plan", "-c", "test.ub", "-o", "invalid.ubp"],
+      "env": { "UB_INPUT_source_file": "missing.txt" },
+      "stderr": "want/invalid-source.stderr",
+      "exitCode": 1
+    },
+    {
+      "name": "validate",
+      "args": ["validate", "-c", "test.ub"],
+      "stdout": "want/validate.stdout",
+      "stderr": "want/notice.stderr"
+    },
+    {
+      "name": "create-plan",
+      "args": ["plan", "--ascii", "-c", "test.ub", "-o", "create.ubp"],
+      "stdout": "want/create-plan.stdout",
+      "stderr": "want/notice.stderr"
+    },
+    {
+      "name": "create-apply",
+      "args": ["apply", "--parallelism", "1", "--format", "json", "create.ubp"],
+      "stdout": "want/create-apply.stdout",
+      "normalize": "json"
+    },
+    {
+      "name": "output",
+      "args": ["output", "--format", "json", "-c", "test.ub"],
+      "stdout": "want/output.json",
+      "normalize": "json"
+    },
+    {
+      "name": "unchanged-plan",
+      "args": ["plan", "--ascii", "-c", "test.ub", "-o", "unchanged.ubp"],
+      "stdout": "want/unchanged-plan.stdout",
+      "stderr": "want/notice.stderr"
+    },
+    {
+      "name": "unchanged-apply",
+      "args": ["apply", "--parallelism", "1", "--format", "json", "unchanged.ubp"],
+      "stdout": "want/unchanged-apply.stdout",
+      "normalize": "json"
+    }
+  ],
+  "planSummaries": [
+    { "path": "create.ubp", "want": "want/create-plan.json" },
+    { "path": "unchanged.ubp", "want": "want/unchanged-plan.json" }
+  ],
+  "absentFiles": ["invalid.ubp"]
+}

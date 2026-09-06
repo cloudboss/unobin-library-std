@@ -1,0 +1,36 @@
+  (rerun)   action.command
+      argv: ['sh', '-c', 'printf "%s\n%s" "$VALUE" "$PWD"']
+      environment: {VALUE: <resource.archive.sha256>}
+      working-dir: '.'
+  (rerun)   action.http
+      body: <action.command.duration, action.command.exit-code, action.command.stderr, action.command.stdout, action.script.duration, action.script.exit-code, action.script.stderr, action.script.stdout, action.wait.attempts, action.wait.duration, action.wait.stderr, action.wait.stdout, resource.archive.base64-sha256, resource.archive.sha256, resource.archive.size, resource.file.sha256, resource.file.size, resource.id.b64-std, resource.id.b64-url, resource.id.dec, resource.id.hex, resource.id.id>
+      headers: {X-Consumer: 'std'}
+      method: 'POST'
+      timeout: 5000000000
+      url: <action.script.stdout>
+  (rerun)   action.script
+      environment: {VALUE: 'script'}
+      script: 'test "$VALUE" = script && printf "%s" "$STD_CONSUMER_URL"'
+      shell: 'sh'
+      working-dir: '.'
+  (rerun)   action.wait
+      argv: ['sh', '-c', 'printf "%s" "$VALUE"']
+      environment: {VALUE: 'ready'}
+      interval: 1000000000
+      timeout: 300000000000
+      working-dir: '.'
+  (create)  resource.archive
+      entries: [{content: 'payload', mode: 384, name: 'data.txt'}]
+      mode: 420
+      path: 'bundle.zip'
+      source-file: null
+  (create)  resource.file
+      content: 'payload'
+      mode: 420
+      path: 'data.txt'
+  (create)  resource.id
+      byte-length: 8
+      keepers: {purpose: 'compiled-consumer'}
+      prefix: 'test-'
+
+Plan: 3 to create, 0 to update, 0 to replace, 0 to destroy, 4 to rerun.

@@ -29,7 +29,7 @@ factory: {
 }
 ```
 
-This branch targets std `v0.5.0-a.1` with Unobin `v0.12.0-a.2` and Go
+This branch targets std `v0.5.0-a.1` with Unobin `v0.12.0-a.3` and Go
 `1.26.2`. After the std release is published, add it to the dependency
 project before compiling the factory:
 
@@ -104,15 +104,19 @@ Relative paths are resolved from the process working directory.
 
 ## Checking a source checkout
 
-Run `go test ./...` to check direct operations, saved plans, state reloads,
-and a compiled factory that uses all seven exports. The compiled test builds
-the pinned Unobin CLI, generates a consumer, and exercises HTTP against a
-local server. Its first run downloads any missing Go dependencies.
+Run `make test` or `go test -short ./...` for direct operations, saved plans,
+and state reloads. Run `make test-all` or `go test ./...` to also check a
+compiled factory that uses all seven exports and HTTP against a local server.
+The compiled test uses Unobin's public `pkg/e2etest` framework, which builds
+the factory directly and reuses Go's caches. Its first run may download
+missing dependencies or the Go toolchain.
 
-The distribution check packages this checkout in a temporary Go module proxy,
-downloads dependencies into an empty module cache, and builds and runs the
+Run `make test-release` for the separate distribution check. It packages this
+checkout in a temporary Go module proxy, downloads dependencies into an empty
+module cache, and builds and runs the
 same consumer without module replacements. This checks the unpublished std
 package against the published Unobin tag; it does not publish a release.
+This test requires the `release` build tag and is excluded from ordinary runs.
 
 Run `make docs` to generate the reference. Local generation and CI both use
 docgen `v0.2.1`; generated files are not committed.

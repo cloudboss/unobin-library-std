@@ -2,6 +2,7 @@ package std
 
 import (
 	"archive/zip"
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -158,15 +159,21 @@ func requireFilesystemResult(
 	t.Helper()
 	body, err := os.ReadFile(path)
 	require.NoError(t, err)
+	requireFilesystemBytes(t, fixture, body, content, outputs)
+}
+
+func requireFilesystemBytes(
+	t *testing.T, fixture string, body []byte, content string, outputs map[string]any,
+) {
+	t.Helper()
 	digest := sha256.Sum256(body)
 	expected := map[string]any{
 		"sha256": hex.EncodeToString(digest[:]), "size": int64(len(body)),
 	}
 	if fixture == "archive" {
 		expected["base64-sha256"] = base64.StdEncoding.EncodeToString(digest[:])
-		reader, err := zip.OpenReader(path)
+		reader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 		require.NoError(t, err)
-		defer func() { require.NoError(t, reader.Close()) }()
 		members := make(map[string]string)
 		for _, member := range reader.File {
 			file, err := member.Open()
