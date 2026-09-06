@@ -35,8 +35,18 @@ type FileOutput struct {
 	Size   int64
 }
 
-func (f *File) SchemaVersion() int      { return 1 }
-func (f *File) ReplaceFields() []string { return []string{"path"} }
+func FileDefinition() runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig] {
+	return runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Identity: runtime.ResourceIdentity[File, *FileOutput]{
+			Version: 1,
+			Scope:   runtime.IdentityConfiguration,
+			AddressInputs: []runtime.AnyInputField[File]{
+				runtime.InputField(func(f *File) *string { return &f.Path }),
+			},
+		},
+	}
+}
 
 // Defaults declares the inputs a body may leave out: mode defaults to 0o644.
 func (f File) Defaults() []defaults.Default {

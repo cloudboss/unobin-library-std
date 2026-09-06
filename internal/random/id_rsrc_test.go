@@ -106,7 +106,22 @@ func TestIDDeleteIsNoop(t *testing.T) {
 	))
 }
 
-func TestIDMetadata(t *testing.T) {
-	require.Equal(t, 1, (&ID{}).SchemaVersion())
-	require.Equal(t, []string{"byte-length", "keepers", "prefix"}, (&ID{}).ReplaceFields())
+func TestIDDefinition(t *testing.T) {
+	definition := IDDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Equal(t, 1, definition.Identity.Version)
+	require.Equal(t, runtime.IdentityConfiguration, definition.Identity.Scope)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[ID, *IDOutput, runtime.NoConfig](definition)
+	})
+	prefix := "prefix-"
+	id, err := definition.Identity.StableID(ID{Prefix: &prefix}, &IDOutput{
+		ID: "unprefixed", B64URL: "prefix-unprefixed",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "unprefixed", id)
+	for _, output := range []*IDOutput{nil, {}} {
+		_, err := definition.Identity.StableID(ID{}, output)
+		require.ErrorContains(t, err, "missing ID")
+	}
 }

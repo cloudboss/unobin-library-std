@@ -140,6 +140,13 @@ func hasPrefix(s, prefix string) bool {
 	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }
 
-func TestFileReplaceFields(t *testing.T) {
-	require.Equal(t, []string{"path"}, (&File{}).ReplaceFields())
+func TestFileDefinition(t *testing.T) {
+	definition := FileDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Equal(t, 1, definition.Identity.Version)
+	require.Equal(t, runtime.IdentityConfiguration, definition.Identity.Scope)
+	require.Nil(t, definition.Identity.StableID)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[File, *FileOutput, runtime.NoConfig](definition)
+	})
 }

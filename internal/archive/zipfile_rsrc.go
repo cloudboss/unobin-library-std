@@ -70,8 +70,18 @@ func (w *countWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (z *ZipFile) SchemaVersion() int      { return 1 }
-func (z *ZipFile) ReplaceFields() []string { return []string{"path"} }
+func ZipFileDefinition() runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig] {
+	return runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Identity: runtime.ResourceIdentity[ZipFile, *ZipFileOutput]{
+			Version: 1,
+			Scope:   runtime.IdentityConfiguration,
+			AddressInputs: []runtime.AnyInputField[ZipFile]{
+				runtime.InputField(func(z *ZipFile) *string { return &z.Path }),
+			},
+		},
+	}
+}
 
 func (z ZipFile) Defaults() []defaults.Default {
 	return []defaults.Default{
@@ -112,16 +122,6 @@ func (z *ZipFile) Delete(_ context.Context, _ runtime.NoConfig, _ *ZipFileOutput
 	err := os.Remove(z.Path)
 	if err != nil && !errors.Is(err, iofs.ErrNotExist) {
 		return err
-	}
-	return nil
-}
-
-func (z *ZipFile) ModifyResourcePlan(
-	req runtime.ResourcePlanRequest[ZipFile, *ZipFileOutput, runtime.NoConfig],
-	resp *runtime.ResourcePlanResponse,
-) error {
-	if req.HasPriorState && runtime.Changed(req.PriorInputs, req.CurrentInputs) {
-		resp.MarkOutputUnknown("sha256", "base64-sha256", "size")
 	}
 	return nil
 }

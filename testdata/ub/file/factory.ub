@@ -1,0 +1,20 @@
+factory: {
+  imports: { std: 'github.com/cloudboss/unobin-library-std' }
+  inputs: {
+    path: { type: string }
+    content: { type: string }
+    mode: { type: integer }
+  }
+  resources: {
+    main: std.fs-file {
+      path: input.path
+      content: input.content
+      mode: input.mode
+      create-directory: true
+    }
+  }
+  outputs: {
+    sha256: { value: resource.main.sha256 }
+    size: { value: resource.main.size }
+  }
+}

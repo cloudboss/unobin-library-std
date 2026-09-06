@@ -1,15 +1,15 @@
 package std
 
 import (
+	"maps"
+	"slices"
 	"testing"
 
+	"github.com/cloudboss/unobin/pkg/runtime"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cloudboss/unobin-library-std/internal/archive"
 	"github.com/cloudboss/unobin-library-std/internal/exec"
-	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
-	"github.com/cloudboss/unobin-library-std/internal/random"
 )
 
 func TestLibraryRegistrations(t *testing.T) {
@@ -36,21 +36,16 @@ func TestLibraryRegistrations(t *testing.T) {
 	_, ok = waitFor.NewReceiver().(*exec.WaitForAction)
 	require.True(t, ok)
 
-	zipFileRes, ok := lib.Resources["archive-zipfile"]
-	require.True(t, ok)
-	require.Equal(t, 1, zipFileRes.SchemaVersion())
-	_, ok = zipFileRes.NewReceiver().(*archive.ZipFile)
-	require.True(t, ok)
-
-	fileRes, ok := lib.Resources["fs-file"]
-	require.True(t, ok)
-	require.Equal(t, 1, fileRes.SchemaVersion())
-	_, ok = fileRes.NewReceiver().(*fs.File)
-	require.True(t, ok)
-
-	randomIDRes, ok := lib.Resources["random-id"]
-	require.True(t, ok)
-	require.Equal(t, 1, randomIDRes.SchemaVersion())
-	_, ok = randomIDRes.NewReceiver().(*random.ID)
-	require.True(t, ok)
+	require.Equal(t, []string{"archive-zipfile", "fs-file", "random-id"},
+		slices.Sorted(maps.Keys(lib.Resources)))
+	require.Equal(t, []string{"exec-command", "exec-script", "exec-wait-for", "net-http"},
+		slices.Sorted(maps.Keys(lib.Actions)))
+	catalog, err := runtime.NewLibraryCatalog([]runtime.LibraryRegistration{
+		{LibraryPath: libraryPath, New: Library},
+	})
+	require.NoError(t, err)
+	libraries, err := catalog.Libraries(map[string]string{"std": libraryPath, "other": libraryPath})
+	require.NoError(t, err)
+	require.Same(t, libraries["std"], libraries["other"])
+	require.Equal(t, libraryPath, libraries["std"].LibraryPath)
 }

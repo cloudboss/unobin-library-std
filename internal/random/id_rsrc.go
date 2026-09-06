@@ -37,12 +37,33 @@ type IDOutput struct {
 	Hex string
 }
 
-func (r *ID) SchemaVersion() int {
-	return 1
-}
-
-func (r *ID) ReplaceFields() []string {
-	return []string{"byte-length", "keepers", "prefix"}
+func IDDefinition() runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig] {
+	return runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Identity: runtime.ResourceIdentity[ID, *IDOutput]{
+			Version: 1,
+			Scope:   runtime.IdentityConfiguration,
+			StableID: func(_ ID, output *IDOutput) (string, error) {
+				if output == nil || output.ID == "" {
+					return "", errors.New("random-id: output is missing ID")
+				}
+				return output.ID, nil
+			},
+		},
+		Replacement: runtime.ReplacementRules[ID, *IDOutput]{
+			Inputs: []runtime.ReplacementRule[ID]{
+				runtime.ReplaceWhenChanged(runtime.InputField(func(r *ID) *int64 {
+					return &r.ByteLength
+				})),
+				runtime.ReplaceWhenChanged(runtime.InputField(func(r *ID) **map[string]string {
+					return &r.Keepers
+				})),
+				runtime.ReplaceWhenChanged(runtime.InputField(func(r *ID) **string {
+					return &r.Prefix
+				})),
+			},
+		},
+	}
 }
 
 func (r ID) Constraints() []constraint.Constraint {

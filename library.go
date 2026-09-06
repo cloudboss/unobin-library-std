@@ -47,13 +47,15 @@ func Library() *runtime.Library {
 				archive.ZipFile,
 				*archive.ZipFileOutput,
 				runtime.NoConfig,
-			](),
-			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput, runtime.NoConfig](),
+			](archive.ZipFileDefinition()),
+			"fs-file": runtime.MakeResource[fs.File, *fs.FileOutput, runtime.NoConfig](
+				fs.FileDefinition(),
+			),
 			"random-id": runtime.MakeResource[
 				random.ID,
 				*random.IDOutput,
 				runtime.NoConfig,
-			](),
+			](random.IDDefinition()),
 		},
 	}
 }

@@ -280,35 +280,15 @@ func TestZipFileDeterministicEntryOrder(t *testing.T) {
 	require.Equal(t, first.SHA256, second.SHA256)
 }
 
-func TestZipFileModifyResourcePlan(t *testing.T) {
-	priorContent := "a"
-	currentContent := "b"
-	prior := ZipFile{Path: "bundle.zip", Entries: &[]ZipEntry{
-		{Name: "a.txt", Content: &priorContent},
-	}}
-	current := ZipFile{Path: "bundle.zip", Entries: &[]ZipEntry{
-		{Name: "a.txt", Content: &currentContent},
-	}}
-	resp := &runtime.ResourcePlanResponse{}
-
-	err := (&ZipFile{}).ModifyResourcePlan(
-		runtime.ResourcePlanRequest[ZipFile, *ZipFileOutput, runtime.NoConfig]{
-			PriorInputs:   prior,
-			CurrentInputs: current,
-			HasPriorState: true,
-		},
-		resp,
-	)
-	require.NoError(t, err)
-	require.Equal(t, map[string]bool{
-		"sha256":        true,
-		"base64-sha256": true,
-		"size":          true,
-	}, resp.UnknownOutputs)
-}
-
-func TestZipFileReplaceFields(t *testing.T) {
-	require.Equal(t, []string{"path"}, (&ZipFile{}).ReplaceFields())
+func TestZipFileDefinition(t *testing.T) {
+	definition := ZipFileDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Equal(t, 1, definition.Identity.Version)
+	require.Equal(t, runtime.IdentityConfiguration, definition.Identity.Scope)
+	require.Nil(t, definition.Identity.StableID)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[ZipFile, *ZipFileOutput, runtime.NoConfig](definition)
+	})
 }
 
 func readZipMembers(t *testing.T, path string) map[string]zipMember {

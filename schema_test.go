@@ -1,6 +1,8 @@
 package std
 
 import (
+	"maps"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,6 +18,10 @@ func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 	schema, warnings, err := goschema.Read(".")
 	require.NoError(t, err)
 	require.Empty(t, warnings)
+	require.Equal(t, []string{"archive-zipfile", "fs-file", "random-id"},
+		slices.Sorted(maps.Keys(schema.Resources)))
+	require.Equal(t, []string{"exec-command", "exec-script", "exec-wait-for", "net-http"},
+		slices.Sorted(maps.Keys(schema.Actions)))
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.mode", Value: "420"},
