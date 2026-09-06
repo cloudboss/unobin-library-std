@@ -22,6 +22,44 @@ func TestSchemaDeclaresInputsAndDefaults(t *testing.T) {
 		slices.Sorted(maps.Keys(schema.Resources)))
 	require.Equal(t, []string{"exec-command", "exec-script", "exec-wait-for", "net-http"},
 		slices.Sorted(maps.Keys(schema.Actions)))
+	for name, outputs := range map[string]map[string]typecheck.Type{
+		"fs-file": {"sha256": typecheck.TString(), "size": typecheck.TInteger()},
+		"archive-zipfile": {
+			"sha256": typecheck.TString(), "base64-sha256": typecheck.TString(),
+			"size": typecheck.TInteger(),
+		},
+	} {
+		require.ElementsMatch(t, slices.Collect(maps.Keys(outputs)),
+			slices.Collect(maps.Keys(schema.Resources[name].Outputs)))
+		for field, want := range outputs {
+			requireOutputType(t, schema.Resources[name].Outputs, field, want)
+		}
+	}
+	for name, outputs := range map[string]map[string]typecheck.Type{
+		"exec-command": {
+			"stdout": typecheck.TString(), "stderr": typecheck.TString(),
+			"exit-code": typecheck.TInteger(), "duration": typecheck.TInteger(),
+		},
+		"exec-script": {
+			"stdout": typecheck.TString(), "stderr": typecheck.TString(),
+			"exit-code": typecheck.TInteger(), "duration": typecheck.TInteger(),
+		},
+		"exec-wait-for": {
+			"stdout": typecheck.TString(), "stderr": typecheck.TString(),
+			"attempts": typecheck.TInteger(), "duration": typecheck.TInteger(),
+		},
+		"net-http": {
+			"status": typecheck.TInteger(), "status-text": typecheck.TString(),
+			"body": typecheck.TString(), "duration": typecheck.TInteger(),
+			"headers": typecheck.TMap(typecheck.TList(typecheck.TString())),
+		},
+	} {
+		require.ElementsMatch(t, slices.Collect(maps.Keys(outputs)),
+			slices.Collect(maps.Keys(schema.Actions[name].Outputs)))
+		for field, want := range outputs {
+			requireOutputType(t, schema.Actions[name].Outputs, field, want)
+		}
+	}
 
 	require.Equal(t, []lang.DefaultSpec{
 		{Field: "input.mode", Value: "420"},

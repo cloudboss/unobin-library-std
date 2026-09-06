@@ -1,6 +1,6 @@
 PROJECT := unobin-library-std
 DIR_ROOT := $(realpath $(CURDIR))
-DOCGEN ?= go run github.com/cloudboss/cloudboss-docs/unobin/cmd/docgen@main
+DOCGEN ?= go run github.com/cloudboss/cloudboss-docs/unobin/cmd/docgen@v0.2.1
 
 .DEFAULT_GOAL := help
 

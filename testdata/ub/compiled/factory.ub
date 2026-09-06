@@ -1,0 +1,90 @@
+factory: {
+  imports: {
+    std: 'github.com/cloudboss/unobin-library-std'
+    other: 'github.com/cloudboss/unobin-library-std'
+  }
+  inputs: {
+    url: { type: string }
+    byte-length: { type: integer, default: 8 }
+    source-file: { type: optional(string) }
+  }
+  resources: {
+    file: std.fs-file { path: 'data.txt', content: 'payload' }
+    archive: other.archive-zipfile {
+      path: 'bundle.zip'
+      source-file: input.source-file
+      entries: [{ name: 'data.txt', content: 'payload', mode: 384 }]
+    }
+    id: std.random-id {
+      byte-length: input.byte-length
+      keepers: { purpose: 'compiled-consumer' }
+      prefix: 'test-'
+    }
+  }
+  actions: {
+    command: std.exec-command {
+      argv: ['sh', '-c', 'printf "%s" "$VALUE"']
+      environment: { VALUE: resource.archive.sha256 }
+      working-dir: '.'
+      @trigger: resource.archive.sha256
+    }
+    script: std.exec-script {
+      script: 'printf "%s" "$VALUE"'
+      environment: { VALUE: 'script' }
+      working-dir: '.'
+    }
+    wait: std.exec-wait-for {
+      argv: ['sh', '-c', 'printf "%s" "$VALUE"']
+      environment: { VALUE: 'ready' }
+      working-dir: '.'
+    }
+    http: std.net-http {
+      url: input.url
+      method: 'POST'
+      headers: { 'X-Consumer': 'std' }
+      body: action.command.stdout
+      timeout: 5000000000
+      @trigger: resource.archive.sha256
+    }
+  }
+  outputs: {
+    file: { value: { sha256: resource.file.sha256, size: resource.file.size } }
+    archive: { value: {
+      sha256: resource.archive.sha256
+      base64-sha256: resource.archive.base64-sha256
+      size: resource.archive.size
+    } }
+    id: { value: {
+      id: resource.id.id
+      b64-url: resource.id.b64-url
+      b64-std: resource.id.b64-std
+      dec: resource.id.dec
+      hex: resource.id.hex
+    } }
+    command: { value: {
+      stdout: action.command.stdout
+      stderr: action.command.stderr
+      exit-code: action.command.exit-code
+      duration: action.command.duration
+    } }
+    script: { value: {
+      stdout: action.script.stdout
+      stderr: action.script.stderr
+      exit-code: action.script.exit-code
+      duration: action.script.duration
+    } }
+    wait: { value: {
+      attempts: action.wait.attempts
+      duration: action.wait.duration
+      stdout: action.wait.stdout
+      stderr: action.wait.stderr
+    } }
+    http: { value: {
+      status: action.http.status
+      status-text: action.http.status-text
+      headers: action.http.headers
+      body: action.http.body
+      duration: action.http.duration
+    } }
+  }
+}

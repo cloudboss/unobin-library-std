@@ -10,12 +10,8 @@ import (
 	"github.com/cloudboss/unobin-library-std/internal/random"
 )
 
-// Library returns the registration record for the std library: the
-// actions and resources that do I/O, the counterpart to the pure
-// functions the language provides under @core. A stack reaches them
-// under its chosen alias, std by convention:
-// actions: { std: { command: { ... } } } and
-// resources: { std: { file: { ... } } }.
+// Library registers standard resources and actions. Factories import the
+// module under an alias and invoke exports such as std.fs-file or std.exec-command.
 func Library() *runtime.Library {
 	return &runtime.Library{
 		Name:        "std",
