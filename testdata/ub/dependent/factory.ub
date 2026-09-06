@@ -1,0 +1,43 @@
+factory: {
+  imports: {
+    std: 'github.com/cloudboss/unobin-library-std'
+    other: 'github.com/cloudboss/unobin-library-std'
+  }
+  inputs: {
+    archive-path: { type: string }
+    digest-path: { type: string }
+    id-path: { type: string }
+    log-path: { type: string }
+    content: { type: string }
+    prefix: { type: string }
+  }
+  resources: {
+    archive: std.archive-zipfile {
+      path: input.archive-path
+      mode: 420
+      entries: [{ name: 'data.txt', content: input.content }]
+    }
+    digest: other.fs-file {
+      path: input.digest-path
+      mode: 420
+      content: resource.archive.sha256
+    }
+    id: std.random-id { byte-length: 8, prefix: input.prefix }
+    encoded: other.fs-file {
+      path: input.id-path
+      mode: 420
+      content: resource.id.hex
+    }
+  }
+  actions: {
+    record: std.exec-command {
+      @trigger: resource.archive.sha256
+      argv: ['sh', '-c', 'cat "$1" >> "$2"', 'record', input.digest-path, input.log-path]
+      @depends-on: [resource.digest]
+    }
+  }
+  outputs: {
+    digest: { value: resource.archive.sha256 }
+    id: { value: resource.id.hex }
+  }
+}

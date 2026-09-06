@@ -32,7 +32,11 @@ func consumerExecutor(
 		{LibraryPath: libraryPath, New: Library},
 	})
 	require.NoError(t, err)
-	libraries, err := catalog.Libraries(map[string]string{"std": libraryPath})
+	bindings := make(map[string]string, len(parsed.Factory.Body.Imports))
+	for _, imported := range parsed.Factory.Body.Imports {
+		bindings[imported.Alias.Name] = imported.Ref.Value
+	}
+	libraries, err := catalog.Libraries(bindings)
 	require.NoError(t, err)
 	store, err := local.NewStore(stateDir, "consumer", "test", encrypters.Noop{})
 	require.NoError(t, err)
