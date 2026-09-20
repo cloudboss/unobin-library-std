@@ -78,13 +78,15 @@ func TestIDCreateRejectsInvalidByteLength(t *testing.T) {
 
 func TestIDReadReturnsPriorOutput(t *testing.T) {
 	prior := &IDOutput{ID: "fixed"}
-	out, err := (&ID{}).Read(context.Background(), runtime.NoConfig{}, prior)
+	out, err := (&ID{}).Read(context.Background(), runtime.NoConfig{},
+		runtime.Prior[ID, *IDOutput, runtime.NoConfig]{Outputs: prior})
 	require.NoError(t, err)
 	require.Same(t, prior, out)
 }
 
 func TestIDReadReportsNotFoundWithoutPriorOutput(t *testing.T) {
-	out, err := (&ID{}).Read(context.Background(), runtime.NoConfig{}, nil)
+	out, err := (&ID{}).Read(context.Background(), runtime.NoConfig{},
+		runtime.Prior[ID, *IDOutput, runtime.NoConfig]{})
 	require.Nil(t, out)
 	require.True(t, errors.Is(err, runtime.ErrNotFound))
 }
@@ -94,7 +96,7 @@ func TestIDUpdatePreservesPriorOutput(t *testing.T) {
 	out, err := (&ID{}).Update(
 		context.Background(),
 		runtime.NoConfig{},
-		runtime.Prior[ID, *IDOutput]{Outputs: prior},
+		runtime.Prior[ID, *IDOutput, runtime.NoConfig]{Outputs: prior},
 	)
 	require.NoError(t, err)
 	require.Same(t, prior, out)
@@ -102,11 +104,25 @@ func TestIDUpdatePreservesPriorOutput(t *testing.T) {
 
 func TestIDDeleteIsNoop(t *testing.T) {
 	require.NoError(t, (&ID{}).Delete(
-		context.Background(), runtime.NoConfig{}, &IDOutput{ID: "fixed"},
+		context.Background(), runtime.NoConfig{},
+		runtime.Prior[ID, *IDOutput, runtime.NoConfig]{Outputs: &IDOutput{ID: "fixed"}},
 	))
 }
 
-func TestIDMetadata(t *testing.T) {
-	require.Equal(t, 1, (&ID{}).SchemaVersion())
-	require.Equal(t, []string{"byte-length", "keepers", "prefix"}, (&ID{}).ReplaceFields())
+func TestIDDefinition(t *testing.T) {
+	definition := IDDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Len(t, definition.Replace.Fields, 3)
+	require.NotNil(t, definition.StableID)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[ID, *IDOutput, runtime.NoConfig](definition)
+	})
+
+	id, err := definition.StableID(ID{}, &IDOutput{ID: "fixed"})
+	require.NoError(t, err)
+	require.Equal(t, "fixed", id)
+	for _, output := range []*IDOutput{nil, {}} {
+		_, err := definition.StableID(ID{}, output)
+		require.ErrorContains(t, err, "missing ID")
+	}
 }

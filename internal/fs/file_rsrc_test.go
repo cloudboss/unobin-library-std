@@ -75,7 +75,7 @@ func TestFileUpdate(t *testing.T) {
 
 	f.Content = "second value"
 	second, err := f.Update(context.Background(), runtime.NoConfig{},
-		runtime.Prior[File, *FileOutput]{Outputs: first})
+		runtime.Prior[File, *FileOutput, runtime.NoConfig]{Outputs: first})
 	require.NoError(t, err)
 
 	body, err := os.ReadFile(path)
@@ -85,8 +85,9 @@ func TestFileUpdate(t *testing.T) {
 }
 
 func TestFileReadReportsNotFound(t *testing.T) {
-	f := &File{Path: filepath.Join(t.TempDir(), "missing")}
-	_, err := f.Read(context.Background(), runtime.NoConfig{}, nil)
+	path := filepath.Join(t.TempDir(), "missing")
+	_, err := (&File{}).Read(context.Background(), runtime.NoConfig{},
+		runtime.Prior[File, *FileOutput, runtime.NoConfig]{Inputs: File{Path: path}})
 	require.True(t, errors.Is(err, runtime.ErrNotFound))
 }
 
@@ -95,8 +96,9 @@ func TestFileReadFromDisk(t *testing.T) {
 	path := filepath.Join(dir, "r.txt")
 	require.NoError(t, os.WriteFile(path, []byte("on disk"), 0o644))
 
-	f := &File{Path: path}
-	out, err := f.Read(context.Background(), runtime.NoConfig{}, nil)
+	f := &File{Path: filepath.Join(dir, "desired.txt")}
+	out, err := f.Read(context.Background(), runtime.NoConfig{},
+		runtime.Prior[File, *FileOutput, runtime.NoConfig]{Inputs: File{Path: path}})
 	require.NoError(t, err)
 	require.Equal(t, int64(7), out.Size)
 }
@@ -106,14 +108,25 @@ func TestFileDelete(t *testing.T) {
 	path := filepath.Join(dir, "d.txt")
 	require.NoError(t, os.WriteFile(path, []byte("x"), 0o644))
 
-	require.NoError(t, (&File{Path: path}).Delete(context.Background(), runtime.NoConfig{}, nil))
+	desired := filepath.Join(dir, "desired.txt")
+	require.NoError(t, os.WriteFile(desired, []byte("desired"), 0o644))
+	require.NoError(t, (&File{Path: desired}).Delete(
+		context.Background(),
+		runtime.NoConfig{},
+		runtime.Prior[File, *FileOutput, runtime.NoConfig]{Inputs: File{Path: path}},
+	))
 	_, err := os.Stat(path)
 	require.True(t, errors.Is(err, os.ErrNotExist))
+	require.FileExists(t, desired)
 }
 
 func TestFileDeleteAbsentIsNoop(t *testing.T) {
-	require.NoError(t, (&File{Path: filepath.Join(t.TempDir(), "absent")}).
-		Delete(context.Background(), runtime.NoConfig{}, nil))
+	path := filepath.Join(t.TempDir(), "absent")
+	require.NoError(t, (&File{}).Delete(
+		context.Background(),
+		runtime.NoConfig{},
+		runtime.Prior[File, *FileOutput, runtime.NoConfig]{Inputs: File{Path: path}},
+	))
 }
 
 func TestFileRequiresPath(t *testing.T) {
@@ -140,6 +153,11 @@ func hasPrefix(s, prefix string) bool {
 	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }
 
-func TestFileReplaceFields(t *testing.T) {
-	require.Equal(t, []string{"path"}, (&File{}).ReplaceFields())
+func TestFileDefinition(t *testing.T) {
+	definition := FileDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Len(t, definition.Replace.Fields, 1)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[File, *FileOutput, runtime.NoConfig](definition)
+	})
 }

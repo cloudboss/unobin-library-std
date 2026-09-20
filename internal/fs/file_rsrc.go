@@ -35,8 +35,15 @@ type FileOutput struct {
 	Size   int64
 }
 
-func (f *File) SchemaVersion() int      { return 1 }
-func (f *File) ReplaceFields() []string { return []string{"path"} }
+func FileDefinition() runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig] {
+	path := runtime.InputField(func(input *File) *string { return &input.Path })
+	return runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Replace: runtime.Replacement[File, *FileOutput, runtime.NoConfig]{
+			Fields: []runtime.AnyInputField[File]{path},
+		},
+	}
+}
 
 // Defaults declares the inputs a body may leave out: mode defaults to 0o644.
 func (f File) Defaults() []defaults.Default {
@@ -49,15 +56,19 @@ func (f *File) Create(_ context.Context, _ runtime.NoConfig) (*FileOutput, error
 	return f.write()
 }
 
-func (f *File) Read(_ context.Context, _ runtime.NoConfig, _ *FileOutput) (*FileOutput, error) {
-	info, err := os.Stat(f.Path)
+func (f *File) Read(
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[File, *FileOutput, runtime.NoConfig],
+) (*FileOutput, error) {
+	info, err := os.Stat(prior.Inputs.Path)
 	if err != nil {
 		if errors.Is(err, iofs.ErrNotExist) {
 			return nil, runtime.ErrNotFound
 		}
 		return nil, err
 	}
-	body, err := os.ReadFile(f.Path)
+	body, err := os.ReadFile(prior.Inputs.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -69,13 +80,19 @@ func (f *File) Read(_ context.Context, _ runtime.NoConfig, _ *FileOutput) (*File
 }
 
 func (f *File) Update(
-	_ context.Context, _ runtime.NoConfig, _ runtime.Prior[File, *FileOutput],
+	_ context.Context,
+	_ runtime.NoConfig,
+	_ runtime.Prior[File, *FileOutput, runtime.NoConfig],
 ) (*FileOutput, error) {
 	return f.write()
 }
 
-func (f *File) Delete(_ context.Context, _ runtime.NoConfig, _ *FileOutput) error {
-	err := os.Remove(f.Path)
+func (f *File) Delete(
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[File, *FileOutput, runtime.NoConfig],
+) error {
+	err := os.Remove(prior.Inputs.Path)
 	if err != nil && !errors.Is(err, iofs.ErrNotExist) {
 		return err
 	}

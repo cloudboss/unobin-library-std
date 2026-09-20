@@ -70,8 +70,15 @@ func (w *countWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (z *ZipFile) SchemaVersion() int      { return 1 }
-func (z *ZipFile) ReplaceFields() []string { return []string{"path"} }
+func ZipFileDefinition() runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig] {
+	path := runtime.InputField(func(input *ZipFile) *string { return &input.Path })
+	return runtime.ResourceDefinition[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Replace: runtime.Replacement[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+			Fields: []runtime.AnyInputField[ZipFile]{path},
+		},
+	}
+}
 
 func (z ZipFile) Defaults() []defaults.Default {
 	return []defaults.Default{
@@ -97,31 +104,29 @@ func (z *ZipFile) Create(_ context.Context, _ runtime.NoConfig) (*ZipFileOutput,
 }
 
 func (z *ZipFile) Read(
-	_ context.Context, _ runtime.NoConfig, _ *ZipFileOutput,
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig],
 ) (*ZipFileOutput, error) {
-	return readZipFileOutput(z.Path)
+	return readZipFileOutput(prior.Inputs.Path)
 }
 
 func (z *ZipFile) Update(
-	_ context.Context, _ runtime.NoConfig, _ runtime.Prior[ZipFile, *ZipFileOutput],
+	_ context.Context,
+	_ runtime.NoConfig,
+	_ runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig],
 ) (*ZipFileOutput, error) {
 	return z.write()
 }
 
-func (z *ZipFile) Delete(_ context.Context, _ runtime.NoConfig, _ *ZipFileOutput) error {
-	err := os.Remove(z.Path)
+func (z *ZipFile) Delete(
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig],
+) error {
+	err := os.Remove(prior.Inputs.Path)
 	if err != nil && !errors.Is(err, iofs.ErrNotExist) {
 		return err
-	}
-	return nil
-}
-
-func (z *ZipFile) ModifyResourcePlan(
-	req runtime.ResourcePlanRequest[ZipFile, *ZipFileOutput, runtime.NoConfig],
-	resp *runtime.ResourcePlanResponse,
-) error {
-	if req.HasPriorState && runtime.Changed(req.PriorInputs, req.CurrentInputs) {
-		resp.MarkOutputUnknown("sha256", "base64-sha256", "size")
 	}
 	return nil
 }

@@ -37,12 +37,22 @@ type IDOutput struct {
 	Hex string
 }
 
-func (r *ID) SchemaVersion() int {
-	return 1
-}
-
-func (r *ID) ReplaceFields() []string {
-	return []string{"byte-length", "keepers", "prefix"}
+func IDDefinition() runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig] {
+	byteLength := runtime.InputField(func(input *ID) *int64 { return &input.ByteLength })
+	keepers := runtime.InputField(func(input *ID) **map[string]string { return &input.Keepers })
+	prefix := runtime.InputField(func(input *ID) **string { return &input.Prefix })
+	return runtime.ResourceDefinition[ID, *IDOutput, runtime.NoConfig]{
+		SchemaVersion: 1,
+		Replace: runtime.Replacement[ID, *IDOutput, runtime.NoConfig]{
+			Fields: []runtime.AnyInputField[ID]{byteLength, keepers, prefix},
+		},
+		StableID: func(_ ID, output *IDOutput) (string, error) {
+			if output == nil || output.ID == "" {
+				return "", errors.New("random-id: output is missing ID")
+			}
+			return output.ID, nil
+		},
+	}
 }
 
 func (r ID) Constraints() []constraint.Constraint {
@@ -73,16 +83,9 @@ func (r *ID) Create(_ context.Context, _ runtime.NoConfig) (*IDOutput, error) {
 }
 
 func (r *ID) Read(
-	_ context.Context, _ runtime.NoConfig, prior *IDOutput,
-) (*IDOutput, error) {
-	if prior == nil {
-		return nil, runtime.ErrNotFound
-	}
-	return prior, nil
-}
-
-func (r *ID) Update(
-	_ context.Context, _ runtime.NoConfig, prior runtime.Prior[ID, *IDOutput],
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[ID, *IDOutput, runtime.NoConfig],
 ) (*IDOutput, error) {
 	if prior.Outputs == nil {
 		return nil, runtime.ErrNotFound
@@ -90,7 +93,22 @@ func (r *ID) Update(
 	return prior.Outputs, nil
 }
 
-func (r *ID) Delete(_ context.Context, _ runtime.NoConfig, _ *IDOutput) error {
+func (r *ID) Update(
+	_ context.Context,
+	_ runtime.NoConfig,
+	prior runtime.Prior[ID, *IDOutput, runtime.NoConfig],
+) (*IDOutput, error) {
+	if prior.Outputs == nil {
+		return nil, runtime.ErrNotFound
+	}
+	return prior.Outputs, nil
+}
+
+func (r *ID) Delete(
+	_ context.Context,
+	_ runtime.NoConfig,
+	_ runtime.Prior[ID, *IDOutput, runtime.NoConfig],
+) error {
 	return nil
 }
 

@@ -124,8 +124,11 @@ func TestZipFileFailsWhenParentMissingAndOptOut(t *testing.T) {
 }
 
 func TestZipFileReadReportsNotFound(t *testing.T) {
-	z := &ZipFile{Path: filepath.Join(t.TempDir(), "missing.zip")}
-	_, err := z.Read(context.Background(), runtime.NoConfig{}, nil)
+	path := filepath.Join(t.TempDir(), "missing.zip")
+	_, err := (&ZipFile{}).Read(context.Background(), runtime.NoConfig{},
+		runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+			Inputs: ZipFile{Path: path},
+		})
 	require.True(t, errors.Is(err, runtime.ErrNotFound))
 }
 
@@ -140,7 +143,15 @@ func TestZipFileReadFromDisk(t *testing.T) {
 	created, err := z.Create(context.Background(), runtime.NoConfig{})
 	require.NoError(t, err)
 
-	read, err := z.Read(context.Background(), runtime.NoConfig{}, nil)
+	desired := filepath.Join(dir, "desired.zip")
+	read, err := (&ZipFile{Path: desired}).Read(
+		context.Background(),
+		runtime.NoConfig{},
+		runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+			Inputs:  *z,
+			Outputs: created,
+		},
+	)
 	require.NoError(t, err)
 	require.Equal(t, created, read)
 }
@@ -159,7 +170,7 @@ func TestZipFileUpdate(t *testing.T) {
 	secondContent := "second"
 	z.Entries = &[]ZipEntry{{Name: "data.txt", Content: &secondContent}}
 	second, err := z.Update(context.Background(), runtime.NoConfig{},
-		runtime.Prior[ZipFile, *ZipFileOutput]{Outputs: first})
+		runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig]{Outputs: first})
 	require.NoError(t, err)
 	require.NotEqual(t, first.SHA256, second.SHA256)
 
@@ -172,14 +183,29 @@ func TestZipFileDelete(t *testing.T) {
 	path := filepath.Join(dir, "bundle.zip")
 	require.NoError(t, os.WriteFile(path, []byte("x"), 0o644))
 
-	require.NoError(t, (&ZipFile{Path: path}).Delete(context.Background(), runtime.NoConfig{}, nil))
+	desired := filepath.Join(dir, "desired.zip")
+	require.NoError(t, os.WriteFile(desired, []byte("desired"), 0o644))
+	require.NoError(t, (&ZipFile{Path: desired}).Delete(
+		context.Background(),
+		runtime.NoConfig{},
+		runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+			Inputs: ZipFile{Path: path},
+		},
+	))
 	_, err := os.Stat(path)
 	require.True(t, errors.Is(err, os.ErrNotExist))
+	require.FileExists(t, desired)
 }
 
 func TestZipFileDeleteAbsentIsNoop(t *testing.T) {
-	require.NoError(t, (&ZipFile{Path: filepath.Join(t.TempDir(), "absent.zip")}).
-		Delete(context.Background(), runtime.NoConfig{}, nil))
+	path := filepath.Join(t.TempDir(), "absent.zip")
+	require.NoError(t, (&ZipFile{}).Delete(
+		context.Background(),
+		runtime.NoConfig{},
+		runtime.Prior[ZipFile, *ZipFileOutput, runtime.NoConfig]{
+			Inputs: ZipFile{Path: path},
+		},
+	))
 }
 
 func TestZipFileRejectsUnsafeEntryNames(t *testing.T) {
@@ -280,35 +306,13 @@ func TestZipFileDeterministicEntryOrder(t *testing.T) {
 	require.Equal(t, first.SHA256, second.SHA256)
 }
 
-func TestZipFileModifyResourcePlan(t *testing.T) {
-	priorContent := "a"
-	currentContent := "b"
-	prior := ZipFile{Path: "bundle.zip", Entries: &[]ZipEntry{
-		{Name: "a.txt", Content: &priorContent},
-	}}
-	current := ZipFile{Path: "bundle.zip", Entries: &[]ZipEntry{
-		{Name: "a.txt", Content: &currentContent},
-	}}
-	resp := &runtime.ResourcePlanResponse{}
-
-	err := (&ZipFile{}).ModifyResourcePlan(
-		runtime.ResourcePlanRequest[ZipFile, *ZipFileOutput, runtime.NoConfig]{
-			PriorInputs:   prior,
-			CurrentInputs: current,
-			HasPriorState: true,
-		},
-		resp,
-	)
-	require.NoError(t, err)
-	require.Equal(t, map[string]bool{
-		"sha256":        true,
-		"base64-sha256": true,
-		"size":          true,
-	}, resp.UnknownOutputs)
-}
-
-func TestZipFileReplaceFields(t *testing.T) {
-	require.Equal(t, []string{"path"}, (&ZipFile{}).ReplaceFields())
+func TestZipFileDefinition(t *testing.T) {
+	definition := ZipFileDefinition()
+	require.Equal(t, 1, definition.SchemaVersion)
+	require.Len(t, definition.Replace.Fields, 1)
+	require.NotPanics(t, func() {
+		runtime.MakeResource[ZipFile, *ZipFileOutput, runtime.NoConfig](definition)
+	})
 }
 
 func readZipMembers(t *testing.T, path string) map[string]zipMember {
