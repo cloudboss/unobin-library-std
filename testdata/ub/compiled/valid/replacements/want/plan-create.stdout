@@ -1,0 +1,15 @@
+  (create)  resource.archive
+      create-directory: true
+      entries: [{content: 'payload', mode: 384, name: 'data.txt'}]
+      mode: 420
+      path: 'initial/bundle.zip'
+  (create)  resource.file
+      content: 'payload'
+      create-directory: true
+      mode: 420
+      path: 'initial/data.txt'
+  (create)  resource.id
+      byte-length: 8
+      prefix: 'initial-'
+
+Plan: 3 to create, 0 to update, 0 to replace, 0 to destroy, 0 to rerun.

@@ -1,0 +1,26 @@
+factory: {
+  imports: { std: 'github.com/cloudboss/unobin-library-std' }
+
+  inputs: {
+    file-path:    { type: string }
+    archive-path: { type: string }
+    id-prefix:    { type: string }
+  }
+
+  resources: {
+    file: std.fs-file {
+      path: input.file-path
+      content: 'payload'
+      create-directory: true
+    }
+    archive: std.archive-zipfile {
+      path: input.archive-path
+      create-directory: true
+      entries: [{ name: 'data.txt', content: 'payload', mode: 384 }]
+    }
+    id: std.random-id {
+      byte-length: 8
+      prefix: input.id-prefix
+    }
+  }
+}

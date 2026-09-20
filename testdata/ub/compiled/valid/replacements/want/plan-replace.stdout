@@ -1,0 +1,15 @@
+  (replace) resource.archive
+      create-directory: true
+      entries: [{content: 'payload', mode: 384, name: 'data.txt'}]
+      mode: 420
+      path: 'initial/bundle.zip' -> 'updated/bundle.zip'  (forces replacement)
+  (replace) resource.file
+      content: 'payload'
+      create-directory: true
+      mode: 420
+      path: 'initial/data.txt' -> 'updated/data.txt'  (forces replacement)
+  (replace) resource.id
+      byte-length: 8
+      prefix: 'initial-' -> 'updated-'  (forces replacement)
+
+Plan: 0 to create, 0 to update, 3 to replace, 0 to destroy, 0 to rerun.

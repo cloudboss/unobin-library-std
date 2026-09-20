@@ -1,0 +1,11 @@
+stack: {
+  factory: {
+    inputs: {
+      file-path: 'initial/data.txt'
+      archive-path: 'initial/bundle.zip'
+      id-prefix: 'initial-'
+    }
+  }
+  state: local { path: '.unobin/state' }
+  encryption: noop {}
+}
