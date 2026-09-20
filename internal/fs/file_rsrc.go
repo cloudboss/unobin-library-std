@@ -39,6 +39,9 @@ func FileDefinition() runtime.ResourceDefinition[File, *FileOutput, runtime.NoCo
 	path := runtime.InputField(func(input *File) *string { return &input.Path })
 	return runtime.ResourceDefinition[File, *FileOutput, runtime.NoConfig]{
 		SchemaVersion: 1,
+		Validate: func(_ context.Context, input File, _ runtime.NoConfig) error {
+			return input.validate()
+		},
 		Replace: runtime.Replacement[File, *FileOutput, runtime.NoConfig]{
 			Fields: []runtime.AnyInputField[File]{path},
 		},
@@ -100,8 +103,8 @@ func (f *File) Delete(
 }
 
 func (f *File) write() (*FileOutput, error) {
-	if f.Path == "" {
-		return nil, errors.New("local.file: path is required")
+	if err := f.validate(); err != nil {
+		return nil, err
 	}
 	mode := os.FileMode(f.Mode)
 	if f.CreateDirectory != nil && *f.CreateDirectory {
@@ -118,4 +121,11 @@ func (f *File) write() (*FileOutput, error) {
 		SHA256: hex.EncodeToString(sum[:]),
 		Size:   int64(len(body)),
 	}, nil
+}
+
+func (f *File) validate() error {
+	if f.Path == "" {
+		return errors.New("local.file: path is required")
+	}
+	return nil
 }

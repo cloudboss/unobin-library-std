@@ -112,6 +112,7 @@ func TestIDDeleteIsNoop(t *testing.T) {
 func TestIDDefinition(t *testing.T) {
 	definition := IDDefinition()
 	require.Equal(t, 1, definition.SchemaVersion)
+	require.NotNil(t, definition.Validate)
 	require.Len(t, definition.Replace.Fields, 3)
 	require.NotNil(t, definition.StableID)
 	require.NotPanics(t, func() {
@@ -125,4 +126,6 @@ func TestIDDefinition(t *testing.T) {
 		_, err := definition.StableID(ID{}, output)
 		require.ErrorContains(t, err, "missing ID")
 	}
+	err = definition.Validate(context.Background(), ID{}, runtime.NoConfig{})
+	require.ErrorContains(t, err, "byte-length must be at least 1")
 }

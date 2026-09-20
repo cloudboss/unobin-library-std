@@ -1,0 +1,31 @@
+factory: {
+  imports: { std: 'github.com/cloudboss/unobin-library-std' }
+  inputs: {
+    path: { type: string }
+    source-dir: { type: optional(string) }
+    source-file: { type: optional(string) }
+    entries: {
+      type: optional(list(object({
+        name: string
+        content: optional(string)
+        source-file: optional(string)
+        mode: optional(integer)
+      })))
+    }
+  }
+  resources: {
+    main: std.archive-zipfile {
+      path: input.path
+      mode: 420
+      create-directory: true
+      source-dir: input.source-dir
+      source-file: input.source-file
+      entries: input.entries
+    }
+  }
+  outputs: {
+    sha256: { value: resource.main.sha256 }
+    base64-sha256: { value: resource.main.base64-sha256 }
+    size: { value: resource.main.size }
+  }
+}

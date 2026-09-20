@@ -1,0 +1,22 @@
+factory: {
+  imports: { std: 'github.com/cloudboss/unobin-library-std' }
+  inputs: {
+    byte-length: { type: integer }
+    keepers: { type: optional(map(string)) }
+    prefix: { type: optional(string) }
+  }
+  resources: {
+    main: std.random-id {
+      byte-length: input.byte-length
+      keepers: input.keepers
+      prefix: input.prefix
+    }
+  }
+  outputs: {
+    id: { value: resource.main.id }
+    b64-url: { value: resource.main.b64-url }
+    b64-std: { value: resource.main.b64-std }
+    dec: { value: resource.main.dec }
+    hex: { value: resource.main.hex }
+  }
+}
