@@ -5,12 +5,22 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cloudboss/unobin/pkg/golibrary"
+	"github.com/cloudboss/unobin/pkg/libraryapi"
+
 	"github.com/cloudboss/unobin-library-std/internal/archive"
 	"github.com/cloudboss/unobin-library-std/internal/exec"
 	"github.com/cloudboss/unobin-library-std/internal/fs"
 	"github.com/cloudboss/unobin-library-std/internal/net"
 	"github.com/cloudboss/unobin-library-std/internal/random"
 )
+
+func TestLibraryCompatibility(t *testing.T) {
+	declaration, err := golibrary.ReadCompatibility(".", ".")
+	require.NoError(t, err)
+	require.Equal(t, Library().Compatibility.RequiredAPI, declaration.RequiredAPI)
+	require.NoError(t, libraryapi.Check(declaration.RequiredAPI, libraryapi.Current()))
+}
 
 func TestLibraryRegistrations(t *testing.T) {
 	lib := Library()

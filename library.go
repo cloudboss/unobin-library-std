@@ -18,8 +18,9 @@ import (
 // resources: { std: { file: { ... } } }.
 func Library() *runtime.Library {
 	return &runtime.Library{
-		Name:        "std",
-		Description: "Standard actions and resources",
+		Name:          "std",
+		Description:   "Standard actions and resources",
+		Compatibility: runtime.LibraryCompatibility{RequiredAPI: "1.0"},
 		Actions: map[string]runtime.ActionRegistration{
 			"exec-command": runtime.MakeAction[
 				exec.CommandAction,

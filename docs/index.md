@@ -4,6 +4,8 @@ The unobin standard library provides resources and actions for common
 tasks such as operating on files, generating identifiers, running processes,
 and making HTTP requests.
 
+The current development version requires Unobin library API `1.0`.
+
 ```
 factory: {
   description: 'Writes an app config file.'
